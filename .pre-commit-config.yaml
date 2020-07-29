@@ -11,12 +11,8 @@ repos:
         '--select=B,C,E,F,W,T4,B9',
         '--exclude=build,__init__.py'
       ]
-- repo: https://github.com/asottile/seed-isort-config
-  rev: v2.1.0
-  hooks:
-    - id: seed-isort-config
 - repo: https://github.com/timothycrosley/isort
-  rev: 4.3.21
+  rev: 5.2.1
   hooks:
     - id: isort
 - repo: https://github.com/pre-commit/mirrors-yapf

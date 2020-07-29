@@ -13,11 +13,9 @@ import yaml
 from foundation.registry import Registry
 
 try:
-    from yaml import CLoader as Loader
-    from yaml import CDumper as Dumper
+    from yaml import CDumper as Dumper, CLoader as Loader
 except ImportError:
-    from yaml import Loader
-    from yaml import Dumper
+    from yaml import Dumper, Loader
 
 __all__ = [
     'HandlerRegistry',

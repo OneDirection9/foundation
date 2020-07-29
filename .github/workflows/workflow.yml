@@ -26,14 +26,14 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 isort yapf
+        pip install flake8 yapf isort==4.3.21
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Lint
       run: |
         echo "Runing flake8"
         flake8 foundation/ tests/
         echo "Runing isort"
-        isort --check-only --diff foundation/ tests/
+        isort -rc --check-only --diff foundation/ tests/
         echo "Runing yapf"
         yapf -r -d foundation/ tests/
 

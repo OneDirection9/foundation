@@ -4,6 +4,7 @@
 from __future__ import absolute_import, division, print_function
 
 import inspect
+import pprint
 from abc import ABCMeta, abstractmethod
 from typing import Callable, List, Optional, Sequence, TypeVar, Union
 
@@ -212,11 +213,38 @@ class Transform(object, metaclass=ABCMeta):
         """
         raise NotImplementedError
 
+    def __repr__(self) -> str:
+        """
+        Produce something like:
+        "MyTransform(field1={self.field1}, field2={self.field2}"
+        """
+        try:
+            sig = inspect.signature(self.__init__)
+            argstr = []
+            for name, param in sig.parameters.items():
+                assert param.kind != param.VAR_POSITIONAL and param.kind != param.VAR_KEYWORD, \
+                    "The default __repr__ doesn't support *args and **kwargs"
+                assert hasattr(self, name), (
+                    'Attribute {} not found! '
+                    'Default __repr__ only works if attributes match the constructor.'.format(name)
+                )
+                attr = getattr(self, name)
+                attr_str = pprint.pformat(attr)
+                if '\n' in attr_str:
+                    # don't show it if pformat decides to use >1 lines
+                    attr_str = '...'
+                argstr.append('{}={}'.format(name, attr_str))
+            return '{}({})'.format(self.__class__.__name__, ', '.join(argstr))
+        except AssertionError:
+            return super().__repr__()
+
+    __str__ = __repr__
+
 
 _T = TypeVar('_T')
 
 
-class TransformList(object):
+class TransformList(Transform):
     """Maintains a list of transform operations which will be applied in sequence.
 
     Attributes:
@@ -228,10 +256,18 @@ class TransformList(object):
         Args:
             transforms: List of transforms to perform.
         """
+        # "Flatten" the list so that TransformList do not recursively contain TransfomList.
+        # The additional hierarchy does not change semantic of the class, but cause extra
+        # complexities in e.g, telling whether a TransformList contains certain Transform
+        tfms_flatten = []
         for t in transforms:
             if not isinstance(t, Transform):
                 raise TypeError('Expected Transform. Got {}'.format(type(t)))
-        self.transforms = transforms
+            if isinstance(t, TransformList):
+                tfms_flatten.extend(t.transforms)
+            else:
+                tfms_flatten.append(t)
+        self.transforms = tfms_flatten
 
     def _apply(self, x: _T, meth: str) -> _T:
         """Applies the transforms on the input.
@@ -261,14 +297,7 @@ class TransformList(object):
         Returns:
             List of transforms.
         """
-        if isinstance(other, TransformList):
-            others = other.transforms
-        elif isinstance(other, Transform):
-            others = [other]
-        else:
-            raise TypeError(
-                'other should either TransformList or Transform. Got {}'.format(type(other))
-            )
+        others = other.transforms if isinstance(other, TransformList) else [other]
         return TransformList(self.transforms + others)
 
     def __iadd__(self, other: Union['TransformList', Transform]) -> 'TransformList':
@@ -279,14 +308,7 @@ class TransformList(object):
         Returns:
             List of transforms.
         """
-        if isinstance(other, TransformList):
-            others = other.transforms
-        elif isinstance(other, Transform):
-            others = [other]
-        else:
-            raise TypeError(
-                'other should either TransformList or Transform. Got {}'.format(type(other))
-            )
+        others = other.transforms if isinstance(other, TransformList) else [other]
         self.transforms.extend(others)
         return self
 
@@ -297,14 +319,7 @@ class TransformList(object):
         Returns:
             List of transforms.
         """
-        if isinstance(other, TransformList):
-            others = other.transforms
-        elif isinstance(other, Transform):
-            others = [other]
-        else:
-            raise TypeError(
-                'other should either TransformList or Transform. Got {}'.format(type(other))
-            )
+        others = other.transforms if isinstance(other, TransformList) else [other]
         return TransformList(others + self.transforms)
 
     def __len__(self) -> int:
@@ -320,6 +335,20 @@ class TransformList(object):
     def inverse(self) -> 'TransformList':
         """Inverts each transform in reversed order."""
         return TransformList([t.inverse() for t in self.transforms[::-1]])
+
+    def __repr__(self) -> str:
+        msgs = [str(t) for t in self.transforms]
+        return 'TransformList[{}]'.format(', '.join(msgs))
+
+    __str__ = __repr__
+
+    # The actual implementations are provided in __getattribute__.
+    # But abstract methods need to be declared here.
+    def apply_coords(self, x):
+        raise NotImplementedError
+
+    def apply_image(self, x):
+        raise NotImplementedError
 
 
 class HFlipTransform(Transform):
@@ -392,6 +421,9 @@ class VFlipTransform(Transform):
 
 class NoOpTransform(Transform):
     """A transform that does nothing."""
+
+    def __init__(self) -> None:
+        super(NoOpTransform, self).__init__()
 
     def apply_image(self, image: np.ndarray) -> np.ndarray:
         return image
@@ -478,8 +510,8 @@ class CropTransform(Transform):
 
         self.x1 = x1
         self.y1 = y1
-        self.x2 = x1 + w
-        self.y2 = y1 + h
+        self.h = h
+        self.w = w
 
     def apply_image(self, image: np.ndarray) -> np.ndarray:
         if not is_numpy(image):
@@ -488,7 +520,7 @@ class CropTransform(Transform):
             raise ValueError('image should be 2D/3D. Got {}D'.format(image.ndim))
 
         # HxW, HxWxC
-        return image[self.y1:self.y2, self.x1:self.x2]
+        return image[self.y1:self.y1 + self.h, self.x1:self.x1 + self.w]
 
     def apply_coords(self, coords: np.ndarray) -> np.ndarray:
         if not is_numpy(coords):
@@ -505,7 +537,7 @@ class CropTransform(Transform):
         from shapely import geometry
 
         # Create a window that will be used to crop
-        crop_box = geometry.box(self.x1, self.y1, self.x2, self.y2).buffer(0.0)
+        crop_box = geometry.box(self.x1, self.y1, self.x1 + self.w, self.y1 + self.h).buffer(0.0)
 
         cropped_polygons = []
 

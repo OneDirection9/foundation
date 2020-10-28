@@ -1,24 +1,22 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 #
 # Modified by: Zhipeng Han
+
 import logging
 import os
-from typing import Any, Dict, List
+from typing import Any, Callable, Dict, List
 
 import yaml
 from yacs.config import CfgNode as _CfgNode
-from yaml import SafeLoader, UnsafeLoader
 
-from .file_io import load
-
-__all__ = ['CfgNode']
+from .file_io import PathManager
 
 BASE_KEY = '_BASE_'
 
 
 class CfgNode(_CfgNode):
-    """Our own extended version of :class:`yacs.config.CfgNode`.
-
+    """
+    Our own extended version of :class:`yacs.config.CfgNode`.
     It contains the following extra features:
 
     1. The :meth:`merge_from_file` method supports the "_BASE_" key,
@@ -37,27 +35,33 @@ class CfgNode(_CfgNode):
 
     @staticmethod
     def load_yaml_with_base(filename: str, allow_unsafe: bool = False) -> dict:
-        """Just like `yaml.load(open(filename))`, but inherit attributes from its `_BASE_`.
+        """
+        Just like `yaml.load(open(filename))`, but inherit attributes from its
+            `_BASE_`.
 
         Args:
-            filename: The file name of the current config. Will be used to find the base config
-                file.
-            allow_unsafe: Whether to allow loading the config file with `yaml.unsafe_load`.
+            filename (str): the file name of the current config. Will be used to
+                find the base config file.
+            allow_unsafe (bool): whether to allow loading the config file with
+                `yaml.unsafe_load`.
 
         Returns:
-            cfg: The loaded yaml.
+            (dict): the loaded yaml
         """
-        try:
-            cfg = load(filename, 'yaml', Loader=SafeLoader)
-        except yaml.constructor.ConstructorError:
-            if not allow_unsafe:
-                raise
-            logger = logging.getLogger(__name__)
-            logger.warning(
-                'Loading config {} with yaml.unsafe_load. Your machine may be at risk if the '
-                'file contains malicious content.'.format(filename)
-            )
-            cfg = load(filename, 'yaml', Loader=UnsafeLoader)
+        with PathManager.open(filename, 'r') as f:
+            try:
+                cfg = yaml.safe_load(f)
+            except yaml.constructor.ConstructorError:
+                if not allow_unsafe:
+                    raise
+                logger = logging.getLogger(__name__)
+                logger.warning(
+                    'Loading config {} with yaml.unsafe_load. Your machine may '
+                    'be at risk if the file contains malicious content.'.format(filename)
+                )
+                f.close()
+                with PathManager.open(filename, 'r') as f:
+                    cfg = yaml.unsafe_load(f)  # pyre-ignore
 
         def merge_a_into_b(a: Dict[Any, Any], b: Dict[Any, Any]) -> None:
             # merge dict a into dict b. values in a will overwrite b.
@@ -72,48 +76,48 @@ class CfgNode(_CfgNode):
             base_cfg_file = cfg[BASE_KEY]
             if base_cfg_file.startswith('~'):
                 base_cfg_file = os.path.expanduser(base_cfg_file)
-            # the path to base cfg is relative to the config file itself.
-            base_cfg_file = os.path.join(os.path.dirname(filename), base_cfg_file)
+            if not any(map(base_cfg_file.startswith, ['/', 'https://', 'http://'])):
+                # the path to base cfg is relative to the config file itself.
+                base_cfg_file = os.path.join(os.path.dirname(filename), base_cfg_file)
             base_cfg = CfgNode.load_yaml_with_base(base_cfg_file, allow_unsafe=allow_unsafe)
             del cfg[BASE_KEY]
 
-            # pyre-fixme[6]: Expected `Dict[typing.Any, typing.Any]` for 2nd param but got `None`.
             merge_a_into_b(cfg, base_cfg)
             return base_cfg
         return cfg
 
     def merge_from_file(self, cfg_filename: str, allow_unsafe: bool = False) -> None:
-        """Merges configs from a given yaml file.
+        """
+        Merge configs from a given yaml file.
 
         Args:
-            cfg_filename: The file name of the yaml config.
-            allow_unsafe: Whether to allow loading the config file with `yaml.unsafe_load`.
+            cfg_filename: the file name of the yaml config.
+            allow_unsafe: whether to allow loading the config file with
+                `yaml.unsafe_load`.
         """
         loaded_cfg = CfgNode.load_yaml_with_base(cfg_filename, allow_unsafe=allow_unsafe)
         loaded_cfg = type(self)(loaded_cfg)
         self.merge_from_other_cfg(loaded_cfg)
 
     # Forward the following calls to base, but with a check on the BASE_KEY.
-    def merge_from_other_cfg(self, cfg_other: 'CfgNode') -> None:
+    def merge_from_other_cfg(self, cfg_other: object) -> Callable[[], None]:
         """
         Args:
-            cfg_other: Configs to merge from.
+            cfg_other (CfgNode): configs to merge from.
         """
-        assert BASE_KEY not in cfg_other, "The reserved key '{}' can only be used in files!".format(
-            BASE_KEY
-        )
-        super().merge_from_other_cfg(cfg_other)
+        assert BASE_KEY not in cfg_other, \
+            "The reserved key '{}' can only be used in files!".format(BASE_KEY)
+        return super().merge_from_other_cfg(cfg_other)
 
-    def merge_from_list(self, cfg_list: List[object]) -> None:
+    def merge_from_list(self, cfg_list: List[object]) -> Callable[[], None]:
         """
         Args:
-            cfg_list: List of configs to merge from.
+            cfg_list (list): list of configs to merge from.
         """
         keys = set(cfg_list[0::2])
-        assert BASE_KEY not in keys, "The reserved key '{}' can only be used in files!".format(
-            BASE_KEY
-        )
-        super().merge_from_list(cfg_list)
+        assert BASE_KEY not in keys, \
+            "The reserved key '{}' can only be used in files!".format(BASE_KEY)
+        return super().merge_from_list(cfg_list)
 
     def __setattr__(self, name: str, val: Any) -> None:  # pyre-ignore
         if name.startswith('COMPUTED_'):

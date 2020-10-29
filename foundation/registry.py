@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 import functools
 import logging
-from typing import Any, Callable, Dict, List, Union
+from typing import Any, Callable, Dict, List, Tuple, Union
 
 import six
 from tabulate import tabulate
@@ -62,13 +62,24 @@ class Registry(object):
         """Returns the registered python object."""
         if name not in self._registry:
             raise KeyError(
-                "'{}' is not registered, available keys are: {}".format(name, self.list())
+                "'{}' is not registered, available keys are: {}".format(name, self.keys())
             )
         return self._registry[name]
 
     def list(self) -> List[str]:
+        """Alias of keys()"""
+        return self.keys()
+
+    def keys(self) -> List[str]:
         """Lists all registered keys."""
         return list(self._registry.keys())
+
+    def values(self) -> List[Any]:
+        """Lists all registered values."""
+        return list(self._registry.values())
+
+    def items(self) -> List[Tuple[str, Any]]:
+        return [(k, v) for k, v in self._registry.items()]
 
     def __contains__(self, key: str) -> bool:
         return key in self._registry

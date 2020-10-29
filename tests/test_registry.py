@@ -10,8 +10,7 @@ class TestRegistry(unittest.TestCase):
     def test_register(self):
         """Test register method."""
 
-        class MyRegistry(Registry):
-            pass
+        MyRegistry = Registry('Test')
 
         @MyRegistry.register('T2')
         @MyRegistry.register
@@ -46,29 +45,28 @@ class TestRegistry(unittest.TestCase):
     def test_register_partial(self):
         """Test register_partial method."""
 
-        class MyRegistry(Registry):
-            pass
+        My_Registry = Registry('Test')
 
-        @MyRegistry.register_partial('T1', 3, b=4)
+        @My_Registry.register_partial('T1', 3, b=4)
         class T1(object):
 
             def __init__(self, a, b=2):
                 self.a = a
                 self.b = b
 
-        inst = MyRegistry.get('T1')()
+        inst = My_Registry.get('T1')()
         self.assertTrue(inst.a == 3 and inst.b == 4)
 
-        MyRegistry.register_partial('T2', b=2)(T1)
-        inst = MyRegistry.get('T2')(1)
+        My_Registry.register_partial('T2', b=2)(T1)
+        inst = My_Registry.get('T2')(1)
         self.assertTrue(inst.a == 1 and inst.b == 2)
 
-        @MyRegistry.register_partial('f1', 3, b=4)
+        @My_Registry.register_partial('f1', 3, b=4)
         def f1(a, b=2):
             return a + b
 
-        res = MyRegistry.get('f1')()
+        res = My_Registry.get('f1')()
         self.assertTrue(res == f1(3, 4))
 
-        MyRegistry.register_partial('f2', 3)(f1)
-        self.assertTrue(MyRegistry.get('f2')() == f1(3))
+        My_Registry.register_partial('f2', 3)(f1)
+        self.assertTrue(My_Registry.get('f2')() == f1(3))

@@ -10,7 +10,36 @@ __all__ = ['Registry']
 
 
 class Registry(object):
-    """A class that keeps a set of objects that can be selected by the name."""
+    """A class that keeps a set of objects that can be selected by the name.
+
+    To create a registry (e.g. a backbone registry):
+
+    .. code-block:: python
+
+        BACKBONE_REGISTRY = Registry('BACKBONE')
+
+    To register an object:
+
+    .. code-block: python
+
+        @BACKBONE_REGISTRY.register
+        class MyBackbone():
+            ...
+
+    Or:
+
+    .. code-block: python
+
+        @BACKBONE_REGISTRY.register('my_backbone')
+        class MyBackbone():
+            ...
+
+    Or:
+
+    .. code-block: python
+
+        BACKBONE_REGISTRY.register('my_backbone')(MyBackbone)
+    """
 
     def __init__(self, name: str) -> None:
         """

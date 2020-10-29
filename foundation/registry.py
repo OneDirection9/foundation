@@ -1,15 +1,12 @@
 from __future__ import absolute_import, division, print_function
 
 import functools
-import logging
 from typing import Any, Callable, Dict, List, Tuple, Union
 
 import six
 from tabulate import tabulate
 
 __all__ = ['Registry']
-
-logger = logging.getLogger(__name__)
 
 
 class Registry(object):

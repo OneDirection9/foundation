@@ -6,10 +6,8 @@ from __future__ import absolute_import, division, print_function
 import math
 import time
 import unittest
-from typing import IO, Any
 
 from foundation.common.config import CfgNode
-from foundation.common.file_handler import BaseFileHandler, HandlerRegistry
 from foundation.common.timer import Timer
 
 
@@ -46,32 +44,6 @@ class TestTimer(unittest.TestCase):
                     math.isclose(pause_second, timer.avg_seconds(), rel_tol=5e-2),
                     msg='{}: {}'.format(pause_second, timer.avg_seconds()),
                 )
-
-
-class TestFileHandler(unittest.TestCase):
-
-    def test_handler_registry(self) -> None:
-        """Test file handler registry."""
-        # Preset file handler
-        available_keys = ['json', 'yaml', 'yml', 'pickle', 'pkl']
-        for key in available_keys:
-            HandlerRegistry.get(key)
-
-        @HandlerRegistry.register('noop')
-        class NoOpHandler(BaseFileHandler):
-            """A handler that does nothing."""
-
-            def load_from_fileobj(self, file: IO, **kwargs: Any) -> Any:
-                pass
-
-            def dump_to_fileobj(self, obj: Any, file: IO, **kwargs: Any) -> None:
-                pass
-
-            def dump_to_str(self, obj: Any, **kwargs: Any) -> str:
-                pass
-
-        noop = HandlerRegistry.get('noop')()
-        self.assertTrue(isinstance(noop, NoOpHandler))
 
 
 class TestCfgNode(unittest.TestCase):

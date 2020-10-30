@@ -9,8 +9,8 @@ from contextlib import contextmanager
 from typing import Generator, Optional
 from unittest.mock import MagicMock, patch
 
-from foundation.common import path
-from foundation.common.path import (
+from foundation.common import file_io
+from foundation.common.file_io import (
     HTTPURLHandler,
     LazyPath,
     OneDrivePathHandler,
@@ -207,9 +207,9 @@ class TestHTTPIO(unittest.TestCase):
             return dest
 
         with patch.object(
-            path, 'get_cache_dir', return_value=self._cache_dir
+            file_io, 'get_cache_dir', return_value=self._cache_dir
         ), patch.object(
-            path, 'download', side_effect=fake_download
+            file_io, 'download', side_effect=fake_download
         ):
             yield
 

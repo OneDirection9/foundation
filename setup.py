@@ -30,6 +30,7 @@ install_requires = [
     'yacs>=0.1.6',
     'pyyaml>=5.1',
     'tqdm',
+    'tabulate',
 ]
 
 extras_require = {

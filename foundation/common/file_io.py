@@ -545,10 +545,16 @@ class HTTPURLHandler(PathHandler):
         return open(local_path, mode)
 
 
-class OneDrivePathHandler(HTTPURLHandler):
+class OneDrivePathHandler(PathHandler):
     """
     Map OneDrive (short) URLs to direct download links
     """
+
+    def __init__(self) -> None:
+        self.cache_map: Dict[str, str] = {}
+
+    def _get_supported_prefixes(self) -> List[str]:
+        return ['https://1drv.ms/u/s!']
 
     def create_one_drive_direct_download(self, one_drive_url: str) -> str:
         """
@@ -565,20 +571,58 @@ class OneDrivePathHandler(HTTPURLHandler):
         result_url = f'https://api.onedrive.com/v1.0/shares/u!{data_b64_string}/root/content'
         return result_url
 
-    def _get_supported_prefixes(self) -> List[str]:
-        return ['https://1drv.ms/u/s!']
-
     def _get_local_path(self, path: str, **kwargs: Any) -> str:
         """
         This implementation downloads the remote resource and caches it locally.
         The resource will only be downloaded if not previously requested.
         """
+        self._check_kwargs(kwargs)
+
         logger = logging.getLogger(__name__)
         direct_url = self.create_one_drive_direct_download(path)
 
         logger.info(f'URL {path} mapped to direct download link {direct_url}')
 
-        return super(OneDrivePathHandler, self)._get_local_path(os.fspath(direct_url), **kwargs)
+        if path not in self.cache_map or not os.path.exists(self.cache_map[path]):
+            logger = logging.getLogger(__name__)
+            parsed_url = urlparse(path)
+            dirname = os.path.join(get_cache_dir(), os.path.dirname(parsed_url.path.lstrip('/')))
+            filename = path.split('/')[-1]
+            cached = os.path.join(dirname, filename)
+            with file_lock(cached):
+                if not os.path.isfile(cached):
+                    cached = download(path, dirname, filename=filename)
+            logger.info('URL {} cached in {}'.format(path, cached))
+            self.cache_map[path] = cached
+        return self.cache_map[path]
+
+    def _open(self,
+              path: str,
+              mode: str = 'r',
+              buffering: int = -1,
+              **kwargs: Any) -> Union[IO[str], IO[bytes]]:
+        """
+        Open a remote HTTP path. The resource is first downloaded and cached
+        locally.
+
+        Args:
+            path (str): A URI supported by this PathHandler
+            mode (str): Specifies the mode in which the file is opened. It defaults
+                to 'r'.
+            buffering (int): Not used for this PathHandler.
+
+        Returns:
+            file: a file-like object.
+        """
+        self._check_kwargs(kwargs)
+        assert mode in ('r', 'rb'), '{} does not support open with {} mode'.format(
+            self.__class__.__name__, mode
+        )
+        assert (
+            buffering == -1
+        ), f'{self.__class__.__name__} does not support the `buffering` argument'
+        local_path = self._get_local_path(path)
+        return open(local_path, mode)
 
 
 # NOTE: this class should be renamed back to PathManager when it is moved to a new library

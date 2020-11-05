@@ -584,7 +584,6 @@ class OneDrivePathHandler(PathHandler):
         logger.info(f'URL {path} mapped to direct download link {direct_url}')
 
         if path not in self.cache_map or not os.path.exists(self.cache_map[path]):
-            logger = logging.getLogger(__name__)
             parsed_url = urlparse(path)
             dirname = os.path.join(get_cache_dir(), os.path.dirname(parsed_url.path.lstrip('/')))
             filename = path.split('/')[-1]

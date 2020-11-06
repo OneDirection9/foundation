@@ -63,10 +63,6 @@ class CfgNode(_CfgNode):
                 with PathManager.open(filename, 'r') as f:
                     cfg = yaml.unsafe_load(f)  # pyre-ignore
 
-        # When the yaml file is empty, the returned value is None
-        # Set to an empty dictionary to avoid TypeError
-        cfg = cfg or dict()
-
         def merge_a_into_b(a: Dict[Any, Any], b: Dict[Any, Any]) -> None:
             # merge dict a into dict b. values in a will overwrite b.
             for k, v in a.items():
@@ -76,7 +72,8 @@ class CfgNode(_CfgNode):
                 else:
                     b[k] = v
 
-        if BASE_KEY in cfg:
+        # cfg is None when the yaml file is empty
+        if cfg is not None and BASE_KEY in cfg:
             base_cfg_file = cfg[BASE_KEY]
             if base_cfg_file.startswith('~'):
                 base_cfg_file = os.path.expanduser(base_cfg_file)

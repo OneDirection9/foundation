@@ -47,7 +47,7 @@ class TestVisualizer(unittest.TestCase):
     def test_correct_output_shape(self) -> None:
         img = np.random.rand(928, 928, 3) * 255
         v = Visualizer(img)
-        out = v.get_image()
+        out = v.output.get_image()
         self.assertEqual(out.shape, img.shape)
 
     def test_draw_random_instance(self) -> None:
@@ -60,7 +60,7 @@ class TestVisualizer(unittest.TestCase):
             for p in polygon:
                 v.draw_polygon(p, color=color)
             v.draw_binary_mask(mask, color=color)
-        out = v.get_image()
+        out = v.output.get_image()
         self.assertEqual(out.shape, img.shape)
 
         # Text 2x scaling
@@ -71,7 +71,7 @@ class TestVisualizer(unittest.TestCase):
             for p in polygon:
                 v.draw_polygon(p, color=color)
             v.draw_binary_mask(mask, color=color)
-        out = v.get_image()
+        out = v.output.get_image()
         self.assertEqual(out.shape[0], img.shape[0] * 2)
 
     def test_draw_random_rotated_instances(self) -> None:
@@ -90,7 +90,7 @@ class TestVisualizer(unittest.TestCase):
         for box, label in zip(boxes_5d, labels):
             color = tuple(random_color(rgb=True, maximum=1))
             v.draw_rotated_box(box, edge_color=color, label=label)
-        out = v.get_image()
+        out = v.output.get_image()
         self.assertEqual(out.shape, img.shape)
 
     def _convert_segmentation(self, segmentation: Union[list, dict]) -> Union[list, np.ndarray]:
@@ -139,7 +139,7 @@ class TestVisualizer(unittest.TestCase):
                     v.draw_binary_mask(segmentation, color=color)
 
             save_filename = '{}_{}.jpg'.format(file_name[:-4], scale)
-            v.save(osp.join(osp.dirname(__file__), 'outputs', save_filename))
+            v.output.save(osp.join(osp.dirname(__file__), 'outputs', save_filename))
 
     def test_draw_coco_instances(self) -> None:
         inst_ann_file = osp.join(self.data_root, 'instances_val2014_demo.json')

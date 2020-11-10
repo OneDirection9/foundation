@@ -1,10 +1,15 @@
 from __future__ import absolute_import, division, print_function
 
+import copy
 import functools
-from typing import Any, Callable, Dict, List, Tuple, Union
+import inspect
+import logging
+from typing import Any, Callable, Dict, List, Union
 
 import six
 from tabulate import tabulate
+
+logger = logging.getLogger(__name__)
 
 __all__ = ['Registry']
 
@@ -49,6 +54,14 @@ class Registry(object):
         self._name = name
         self._registry: Dict[str, Any] = {}
 
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def registry(self) -> Dict[str, Any]:
+        return self._registry
+
     def _register(self, name: str, obj: Any) -> None:
         # TODO: consider adding inspection of specific class
         if not isinstance(name, six.string_types) or not name:
@@ -88,24 +101,13 @@ class Registry(object):
         """Returns the registered python object."""
         if name not in self._registry:
             raise KeyError(
-                "'{}' is not registered, available keys are: {}".format(name, self.keys())
+                "'{}' is not registered, available keys are: {}".format(name, self.list())
             )
         return self._registry[name]
 
     def list(self) -> List[str]:
-        """Alias of keys()"""
-        return self.keys()
-
-    def keys(self) -> List[str]:
         """Lists all registered keys."""
         return list(self._registry.keys())
-
-    def values(self) -> List[Any]:
-        """Lists all registered values."""
-        return list(self._registry.values())
-
-    def items(self) -> List[Tuple[str, Any]]:
-        return [(k, v) for k, v in self._registry.items()]
 
     def __contains__(self, key: str) -> bool:
         return key in self._registry
@@ -116,3 +118,29 @@ class Registry(object):
         return 'Registry of {}:\n'.format(self._name) + table
 
     __str__ = __repr__
+
+
+def build(registry: Registry, cfg: Dict[str, Any]) -> Any:
+    """Builds python object from registry.
+
+    Args:
+        registry: The registry to search the object from.
+        cfg: Config dictionary, it should at least contain the key "name".
+
+    Returns:
+        The constructed object.
+    """
+    if not isinstance(cfg, dict):
+        raise TypeError('cfg should be dictionary. Got {}'.format(type(cfg)))
+
+    _cfg = copy.deepcopy(cfg)
+
+    try:
+        obj_name = _cfg.pop('name')
+        obj = registry.get(obj_name)
+        # TODO: support other type
+        assert inspect.isclass(obj), 'build only support build instance from class'
+        return obj(**_cfg)
+    except Exception as e:
+        logger.error("Failed to build object from '{}' with cfg={}".format(registry.name, cfg))
+        raise e

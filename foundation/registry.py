@@ -11,7 +11,7 @@ from tabulate import tabulate
 
 logger = logging.getLogger(__name__)
 
-__all__ = ['Registry']
+__all__ = ['Registry', 'build']
 
 
 class Registry(object):

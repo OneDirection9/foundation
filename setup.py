@@ -35,7 +35,8 @@ install_requires = [
 extras_require = {
     "all": [
         "shapely",
-        "pycocotools>=2.0.2",  # corresponds to https://github.com/ppwwyyxx/cocoapi
+        # FIXME: downgrade pycocotools, since it will be failed to run on CI
+        "pycocotools==2.0.0",  # corresponds to https://github.com/ppwwyyxx/cocoapi
     ],
     "dev": [
         "flake8==3.8.4",

@@ -33,7 +33,7 @@ jobs:
         echo "Runing flake8"
         flake8 foundation/ tests/
         echo "Runing isort"
-        isort --check-only --sp . foundation/ tests/
+        isort --check-only foundation/ tests/
         echo "Runing black"
         black foundation/ tests/
 

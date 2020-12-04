@@ -34,7 +34,17 @@ install_requires = [
 ]
 
 extras_require = {
-    "all": ["pycocotools"],
+    "all": [
+        "shapely",
+        "pycocotools>=2.0.2",  # corresponds to https://github.com/ppwwyyxx/cocoapi
+    ],
+    "dev": [
+        "flake8==3.8.4",
+        "isort==5.6.4",
+        "black==20.8b1",
+        "flake8-bugbear",
+        "flake8-comprehensions",
+    ],
 }
 
 setup(

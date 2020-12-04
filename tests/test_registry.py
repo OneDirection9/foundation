@@ -48,6 +48,8 @@ class TestRegistry(unittest.TestCase):
 
         @My_Registry.register_partial("T1", 3, b=4)
         class T1(object):
+            __slots__ = ["a", "b"]
+
             def __init__(self, a, b=2):
                 self.a = a
                 self.b = b

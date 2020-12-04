@@ -6,7 +6,7 @@ from __future__ import absolute_import, division, print_function
 from time import perf_counter
 from typing import Optional
 
-__all__ = ['Timer']
+__all__ = ["Timer"]
 
 
 class Timer(object):
@@ -25,7 +25,7 @@ class Timer(object):
     def pause(self) -> None:
         """Pauses the timer."""
         if self._paused is not None:
-            raise ValueError('Trying to pause a Timer that is already paused!')
+            raise ValueError("Trying to pause a Timer that is already paused!")
         self._paused = perf_counter()
 
     def is_paused(self) -> bool:
@@ -38,7 +38,7 @@ class Timer(object):
     def resume(self) -> None:
         """Resumes the timer."""
         if self._paused is None:
-            raise ValueError('Trying to resume a Timer that is not paused!')
+            raise ValueError("Trying to resume a Timer that is not paused!")
         self._total_paused += perf_counter() - self._paused  # pyre-ignore
         self._paused = None
         self._count_start += 1

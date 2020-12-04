@@ -1,7 +1,7 @@
 # foundation
 Foundations of deep learning
 
-This repository helps me to organize a project, such as pre-commit, setup, isort, yapf, and so on.
+This repository helps me to organize a project, such as pre-commit, setup, isort, black, and so on.
 
 # References
 

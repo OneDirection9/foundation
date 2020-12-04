@@ -12,26 +12,26 @@ import cv2
 import numpy as np
 
 __all__ = [
-    'CV2_INTER_CODES',
-    'is_numpy',
-    'is_numpy_image',
-    'is_numpy_coords',
-    'Transform',
-    'TransformList',
-    'HFlipTransform',
-    'VFlipTransform',
-    'NoOpTransform',
-    'ResizeTransform',
-    'CropTransform',
-    'BlendTransform',
+    "CV2_INTER_CODES",
+    "is_numpy",
+    "is_numpy_image",
+    "is_numpy_coords",
+    "Transform",
+    "TransformList",
+    "HFlipTransform",
+    "VFlipTransform",
+    "NoOpTransform",
+    "ResizeTransform",
+    "CropTransform",
+    "BlendTransform",
 ]
 
 CV2_INTER_CODES = {
-    'nearest': cv2.INTER_NEAREST,
-    'bilinear': cv2.INTER_LINEAR,
-    'area': cv2.INTER_AREA,
-    'bicubic': cv2.INTER_CUBIC,
-    'lanczos': cv2.INTER_LANCZOS4,
+    "nearest": cv2.INTER_NEAREST,
+    "bilinear": cv2.INTER_LINEAR,
+    "area": cv2.INTER_AREA,
+    "bicubic": cv2.INTER_CUBIC,
+    "lanczos": cv2.INTER_LANCZOS4,
 }
 
 
@@ -183,7 +183,7 @@ class Transform(object, metaclass=ABCMeta):
             def wrapper(decorated_func: Callable) -> Callable:
                 if not callable(decorated_func):
                     raise TypeError(
-                        'You can only register a callable to a Transform. Got {}'.format(func)
+                        "You can only register a callable to a Transform. Got {}".format(func)
                     )
                 cls.register_type(data_type, decorated_func)
                 return decorated_func
@@ -191,17 +191,17 @@ class Transform(object, metaclass=ABCMeta):
             return wrapper
 
         if not callable(func):
-            raise TypeError('You can only register a callable to a Transform. Got {}'.format(func))
+            raise TypeError("You can only register a callable to a Transform. Got {}".format(func))
 
         argspec = inspect.getfullargspec(func)
         if len(argspec.args) != 2:
             raise TypeError(
-                'You can only register a function that takes two positional '
-                'arguments to a Transform! Got a function with spec {}'.format(str(argspec))
+                "You can only register a function that takes two positional "
+                "arguments to a Transform! Got a function with spec {}".format(str(argspec))
             )
-        setattr(cls, 'apply_' + data_type, func)
+        setattr(cls, "apply_" + data_type, func)
 
-    def inverse(self) -> 'Transform':
+    def inverse(self) -> "Transform":
         """Creates a transform that inverts the geometric changes of this transform.
 
         Note that the inverse is meant for geometric changes only (i.e. change of coordinates). The
@@ -222,26 +222,27 @@ class Transform(object, metaclass=ABCMeta):
             sig = inspect.signature(self.__init__)
             argstr = []
             for name, param in sig.parameters.items():
-                assert param.kind != param.VAR_POSITIONAL and param.kind != param.VAR_KEYWORD, \
-                    "The default __repr__ doesn't support *args and **kwargs"
+                assert (
+                    param.kind != param.VAR_POSITIONAL and param.kind != param.VAR_KEYWORD
+                ), "The default __repr__ doesn't support *args and **kwargs"
                 assert hasattr(self, name), (
-                    'Attribute {} not found! '
-                    'Default __repr__ only works if attributes match the constructor.'.format(name)
+                    "Attribute {} not found! "
+                    "Default __repr__ only works if attributes match the constructor.".format(name)
                 )
                 attr = getattr(self, name)
                 attr_str = pprint.pformat(attr)
-                if '\n' in attr_str:
+                if "\n" in attr_str:
                     # don't show it if pformat decides to use >1 lines
-                    attr_str = '...'
-                argstr.append('{}={}'.format(name, attr_str))
-            return '{}({})'.format(self.__class__.__name__, ', '.join(argstr))
+                    attr_str = "..."
+                argstr.append("{}={}".format(name, attr_str))
+            return "{}({})".format(self.__class__.__name__, ", ".join(argstr))
         except AssertionError:
             return super().__repr__()
 
     __str__ = __repr__
 
 
-_T = TypeVar('_T')
+_T = TypeVar("_T")
 
 
 class TransformList(Transform):
@@ -262,7 +263,7 @@ class TransformList(Transform):
         tfms_flatten = []
         for t in transforms:
             if not isinstance(t, Transform):
-                raise TypeError('Expected Transform. Got {}'.format(type(t)))
+                raise TypeError("Expected Transform. Got {}".format(type(t)))
             if isinstance(t, TransformList):
                 tfms_flatten.extend(t.transforms)
             else:
@@ -285,11 +286,11 @@ class TransformList(Transform):
 
     def __getattribute__(self, name: str):
         # use __getattribute__ to win priority over any registered dtypes
-        if name.startswith('apply_'):
+        if name.startswith("apply_"):
             return lambda x: self._apply(x, name)
         return super().__getattribute__(name)
 
-    def __add__(self, other: Union['TransformList', Transform]) -> 'TransformList':
+    def __add__(self, other: Union["TransformList", Transform]) -> "TransformList":
         """
         Args:
             other: Transformation(s) to add.
@@ -300,7 +301,7 @@ class TransformList(Transform):
         others = other.transforms if isinstance(other, TransformList) else [other]
         return TransformList(self.transforms + others)
 
-    def __iadd__(self, other: Union['TransformList', Transform]) -> 'TransformList':
+    def __iadd__(self, other: Union["TransformList", Transform]) -> "TransformList":
         """
         Args:
             other: Transformation(s) to add.
@@ -312,7 +313,7 @@ class TransformList(Transform):
         self.transforms.extend(others)
         return self
 
-    def __radd__(self, other: Union['TransformList', Transform]) -> 'TransformList':
+    def __radd__(self, other: Union["TransformList", Transform]) -> "TransformList":
         """
         Args:
             other: Transformation(s) to add.
@@ -332,13 +333,13 @@ class TransformList(Transform):
     def __getitem__(self, idx: Union[int, slice]) -> Transform:
         return self.transforms[idx]
 
-    def inverse(self) -> 'TransformList':
+    def inverse(self) -> "TransformList":
         """Inverts each transform in reversed order."""
         return TransformList([t.inverse() for t in self.transforms[::-1]])
 
     def __repr__(self) -> str:
         msgs = [str(t) for t in self.transforms]
-        return 'TransformList[{}]'.format(', '.join(msgs))
+        return "TransformList[{}]".format(", ".join(msgs))
 
     __str__ = __repr__
 
@@ -359,9 +360,9 @@ class HFlipTransform(Transform):
 
     def apply_image(self, image: np.ndarray) -> np.ndarray:
         if not is_numpy(image):
-            raise TypeError('image should be np.ndarray. Got {}'.format(type(image)))
+            raise TypeError("image should be np.ndarray. Got {}".format(type(image)))
         if not is_numpy_image(image):
-            raise ValueError('image should be 2D/3D. Got {}D'.format(image.ndim))
+            raise ValueError("image should be 2D/3D. Got {}D".format(image.ndim))
 
         # HxWxC, HxW
         return np.flip(image, axis=1)
@@ -373,14 +374,14 @@ class HFlipTransform(Transform):
             by `(W - x, H - y)`, not `(W - 1 - x, H - 1 - y)`.
         """
         if not is_numpy(coords):
-            raise TypeError('coords should be np.ndarray. Got {}'.format(type(coords)))
+            raise TypeError("coords should be np.ndarray. Got {}".format(type(coords)))
         if not is_numpy_coords(coords):
-            raise ValueError('coords should be of shape Nx2. Got {}'.format(coords.shape))
+            raise ValueError("coords should be of shape Nx2. Got {}".format(coords.shape))
 
         coords[:, 0] = self.width - coords[:, 0]
         return coords
 
-    def inverse(self) -> 'Transform':
+    def inverse(self) -> "Transform":
         """The inverse is to flip again."""
         return self
 
@@ -393,9 +394,9 @@ class VFlipTransform(Transform):
 
     def apply_image(self, image: np.ndarray) -> np.ndarray:
         if not is_numpy(image):
-            raise TypeError('image should be np.ndarray. Got {}'.format(type(image)))
+            raise TypeError("image should be np.ndarray. Got {}".format(type(image)))
         if not is_numpy_image(image):
-            raise ValueError('image should be 2D/3D. Got {}D'.format(image.ndim))
+            raise ValueError("image should be 2D/3D. Got {}D".format(image.ndim))
 
         # HxWxC, HxW
         return np.flip(image, axis=0)
@@ -407,14 +408,14 @@ class VFlipTransform(Transform):
              by `(W - x, H - y)`, not `(W - 1 - x, H - 1 - y)`.
         """
         if not is_numpy(coords):
-            raise TypeError('coords should be np.ndarray. Got {}'.format(type(coords)))
+            raise TypeError("coords should be np.ndarray. Got {}".format(type(coords)))
         if not is_numpy_coords(coords):
-            raise ValueError('coords should be of shape Nx2. Got {}'.format(coords.shape))
+            raise ValueError("coords should be of shape Nx2. Got {}".format(coords.shape))
 
         coords[:, 1] = self.height - coords[:, 1]
         return coords
 
-    def inverse(self) -> 'Transform':
+    def inverse(self) -> "Transform":
         """The inverse is to flip again."""
         return self
 
@@ -432,11 +433,11 @@ class NoOpTransform(Transform):
         return coords
 
     def __getattr__(self, name: str) -> Callable:
-        if name.startswith('apply_'):
+        if name.startswith("apply_"):
             return lambda x: x
-        raise AttributeError('NoOpTransform object has no attribute {}'.format(name))
+        raise AttributeError("NoOpTransform object has no attribute {}".format(name))
 
-    def inverse(self) -> 'Transform':
+    def inverse(self) -> "Transform":
         return self
 
 
@@ -460,13 +461,13 @@ class ResizeTransform(Transform):
 
     def apply_image(self, image: np.ndarray, interp: Optional[str] = None) -> np.ndarray:
         if not is_numpy(image):
-            raise TypeError('image should be np.ndarray. Got {}'.format(type(image)))
+            raise TypeError("image should be np.ndarray. Got {}".format(type(image)))
         if not is_numpy_image(image):
-            raise ValueError('image should be 2D/3D. Got {}D'.format(image.ndim))
+            raise ValueError("image should be 2D/3D. Got {}D".format(image.ndim))
 
         h, w = image.shape[:2]
         if self.h != h or self.w != w:
-            raise ValueError('Input size mismatch h w {}:{} -> {}:{}'.format(self.h, self.w, h, w))
+            raise ValueError("Input size mismatch h w {}:{} -> {}:{}".format(self.h, self.w, h, w))
 
         interp_method = interp if interp is not None else self.interp
         resized_image = cv2.resize(
@@ -476,18 +477,18 @@ class ResizeTransform(Transform):
 
     def apply_coords(self, coords: np.ndarray) -> np.ndarray:
         if not is_numpy(coords):
-            raise TypeError('coords should be np.ndarray. Got {}'.format(type(coords)))
+            raise TypeError("coords should be np.ndarray. Got {}".format(type(coords)))
         if not is_numpy_coords(coords):
-            raise ValueError('coords should be of shape Nx2. Got {}'.format(coords.shape))
+            raise ValueError("coords should be of shape Nx2. Got {}".format(coords.shape))
 
         coords[:, 0] = coords[:, 0] * (self.new_w * 1.0 / self.w)
         coords[:, 1] = coords[:, 1] * (self.new_h * 1.0 / self.h)
         return coords
 
     def apply_segmentation(self, segmentation: np.ndarray) -> np.ndarray:
-        return self.apply_image(segmentation, interp='nearest')
+        return self.apply_image(segmentation, interp="nearest")
 
-    def inverse(self) -> 'Transform':
+    def inverse(self) -> "Transform":
         return ResizeTransform(self.new_h, self.new_w, self.h, self.w, self.interp)
 
 
@@ -500,13 +501,13 @@ class CropTransform(Transform):
             x1, y1, h, w: Crop the image by [y1:y1+h, x1:x1+w].
         """
         if x1 < 0:
-            raise ValueError('x1 should >= 0. Got {}'.format(x1))
+            raise ValueError("x1 should >= 0. Got {}".format(x1))
         if y1 < 0:
-            raise ValueError('y1 should >= 0. Got {}'.format(y1))
+            raise ValueError("y1 should >= 0. Got {}".format(y1))
         if h <= 0:
-            raise ValueError('h should > 0. Got {}'.format(h))
+            raise ValueError("h should > 0. Got {}".format(h))
         if w <= 0:
-            raise ValueError('w should > 0. Got {}'.format(w))
+            raise ValueError("w should > 0. Got {}".format(w))
 
         self.x1 = x1
         self.y1 = y1
@@ -515,18 +516,18 @@ class CropTransform(Transform):
 
     def apply_image(self, image: np.ndarray) -> np.ndarray:
         if not is_numpy(image):
-            raise TypeError('image should be np.ndarray. Got {}'.format(type(image)))
+            raise TypeError("image should be np.ndarray. Got {}".format(type(image)))
         if not is_numpy_image(image):
-            raise ValueError('image should be 2D/3D. Got {}D'.format(image.ndim))
+            raise ValueError("image should be 2D/3D. Got {}D".format(image.ndim))
 
         # HxW, HxWxC
-        return image[self.y1:self.y1 + self.h, self.x1:self.x1 + self.w]
+        return image[self.y1 : self.y1 + self.h, self.x1 : self.x1 + self.w]
 
     def apply_coords(self, coords: np.ndarray) -> np.ndarray:
         if not is_numpy(coords):
-            raise TypeError('coords should be np.ndarray. Got {}'.format(type(coords)))
+            raise TypeError("coords should be np.ndarray. Got {}".format(type(coords)))
         if not is_numpy_coords(coords):
-            raise ValueError('coords should be of shape Nx2. Got {}'.format(coords.shape))
+            raise ValueError("coords should be of shape Nx2. Got {}".format(coords.shape))
 
         coords[:, 0] -= self.x1
         coords[:, 1] -= self.y1
@@ -545,7 +546,7 @@ class CropTransform(Transform):
             polygon = geometry.Polygon(polygon).buffer(0.0)
             # polygon must be valid to perform intersection.
             if not polygon.is_valid:
-                raise ValueError('polygon is not valid')
+                raise ValueError("polygon is not valid")
             cropped = polygon.intersection(crop_box)
             if cropped.is_empty:
                 continue
@@ -582,9 +583,9 @@ class BlendTransform(Transform):
 
     def apply_image(self, image: np.ndarray) -> np.ndarray:
         if not is_numpy(image):
-            raise TypeError('image should be np.ndarray. Got {}'.format(type(image)))
+            raise TypeError("image should be np.ndarray. Got {}".format(type(image)))
         if not is_numpy_image(image):
-            raise ValueError('image should be 2D/3D. Got {}D'.format(image.ndim))
+            raise ValueError("image should be 2D/3D. Got {}D".format(image.ndim))
 
         if image.dtype == np.uint8:
             image = image.astype(np.float32)
@@ -595,15 +596,15 @@ class BlendTransform(Transform):
 
     def apply_coords(self, coords: np.ndarray) -> np.ndarray:
         if not is_numpy(coords):
-            raise TypeError('coords should be np.ndarray. Got {}'.format(type(coords)))
+            raise TypeError("coords should be np.ndarray. Got {}".format(type(coords)))
         if not is_numpy_coords(coords):
-            raise ValueError('coords should be of shape Nx2. Got {}'.format(coords.shape))
+            raise ValueError("coords should be of shape Nx2. Got {}".format(coords.shape))
 
         return coords
 
     def apply_segmentation(self, segmentation: np.ndarray) -> np.ndarray:
         return segmentation
 
-    def inverse(self) -> 'Transform':
+    def inverse(self) -> "Transform":
         """The inverse is a no-op."""
         return NoOpTransform()

@@ -13,13 +13,12 @@ from foundation.transforms.transform import CV2_INTER_CODES
 
 
 class TestTransforms(unittest.TestCase):
-
     def setUp(self) -> None:
         super().setUp()
         np.random.seed(42)
 
     def test_register(self):
-        dtype = 'int'
+        dtype = "int"
 
         def add1(t, x):
             return x + 1
@@ -32,7 +31,7 @@ class TestTransforms(unittest.TestCase):
 
         transforms = T.TransformList(
             [
-                T.ResizeTransform(0, 0, 0, 0, 'bilinear'),
+                T.ResizeTransform(0, 0, 0, 0, "bilinear"),
                 T.CropTransform(0, 0, 10, 10),
                 T.HFlipTransform(3),
             ]
@@ -55,7 +54,7 @@ class TestTransforms(unittest.TestCase):
         """
         Test register using decorator.
         """
-        dtype = 'float'
+        dtype = "float"
 
         @T.HFlipTransform.register_type(dtype)
         def add1(t, x):
@@ -103,7 +102,7 @@ class TestTransforms(unittest.TestCase):
             (list): expected shape of the output array.
         """
         x1, y1, h, w = args
-        ret = img[y1:y1 + h, x1:x1 + w]
+        ret = img[y1 : y1 + h, x1 : x1 + w]
         return ret, ret.shape
 
     @staticmethod
@@ -193,7 +192,7 @@ class TestTransforms(unittest.TestCase):
                 `nhwc`.
         """
         # Prepare mesh grid as test case.
-        img_h_grid, img_w_grid = np.mgrid[0:h * 2:2, 0:w * 2:2]
+        img_h_grid, img_w_grid = np.mgrid[0 : h * 2 : 2, 0 : w * 2 : 2]
         img_hw_grid = img_h_grid * w + img_w_grid
         img_hwc_grid = np.repeat(img_hw_grid[:, :, None], c, axis=2)
 
@@ -202,22 +201,23 @@ class TestTransforms(unittest.TestCase):
         img_hwc_random = np.random.rand(h, w, c)
 
         for array_type, input_shape, init in itertools.product(
-            [np.uint8, np.float32], ['hw', 'hwc'], ['grid', 'random']
-        ):  # yapf: disable
-            yield locals()['img_{}_{}'.format(input_shape,
-                                              init)].astype(array_type), array_type, input_shape
+            [np.uint8, np.float32], ["hw", "hwc"], ["grid", "random"]
+        ):
+            yield locals()["img_{}_{}".format(input_shape, init)].astype(
+                array_type
+            ), array_type, input_shape
 
     def test_blend_img_transforms(self):
         """
         Test BlendTransform.
         """
-        _trans_name = 'BlendTransform'
+        _trans_name = "BlendTransform"
         blend_src_hw = np.ones((10, 10))
         blend_src_hwc = np.ones((10, 10, 3))
         blend_src_nhwc = np.ones((8, 10, 10, 3))
 
         for img, array_type, shape_str in TestTransforms._img_provider():
-            blend_src = locals()['blend_src_{}'.format(shape_str)].astype(array_type)
+            blend_src = locals()["blend_src_{}".format(shape_str)].astype(array_type)
             params = (
                 (blend_src, 0.0, 1.0),
                 (blend_src, 0.3, 0.7),
@@ -226,7 +226,7 @@ class TestTransforms(unittest.TestCase):
                 (blend_src, 1.0, 0.0),
             )
             for param in params:
-                gt_transformer = getattr(self, '{}_img_gt'.format(_trans_name))
+                gt_transformer = getattr(self, "{}_img_gt".format(_trans_name))
                 transformer = getattr(T, _trans_name)(*param)
 
                 result = transformer.apply_image(img)
@@ -235,15 +235,15 @@ class TestTransforms(unittest.TestCase):
                 self.assertEqual(
                     shape_gt,
                     result.shape,
-                    'transform {} failed to pass the shape check with'
-                    'params {} given input with shape {} and type {}'.format(
+                    "transform {} failed to pass the shape check with"
+                    "params {} given input with shape {} and type {}".format(
                         _trans_name, param, shape_str, array_type
                     ),
                 )
                 self.assertTrue(
                     np.allclose(result, img_gt),
-                    'transform {} failed to pass the value check with'
-                    'params {} given input with shape {} and type {}'.format(
+                    "transform {} failed to pass the value check with"
+                    "params {} given input with shape {} and type {}".format(
                         _trans_name, param, shape_str, array_type
                     ),
                 )
@@ -252,7 +252,7 @@ class TestTransforms(unittest.TestCase):
         """
         Test CropTransform..
         """
-        _trans_name = 'CropTransform'
+        _trans_name = "CropTransform"
         params = (
             # (0, 0, 0, 0),
             (0, 0, 1, 1),
@@ -266,8 +266,8 @@ class TestTransforms(unittest.TestCase):
         )
         for (img, array_type, shape_str), param in itertools.product(
             TestTransforms._img_provider(), params
-        ):  # yapf: disable
-            gt_transformer = getattr(self, '{}_img_gt'.format(_trans_name))
+        ):
+            gt_transformer = getattr(self, "{}_img_gt".format(_trans_name))
             transformer = getattr(T, _trans_name)(*param)
 
             result = transformer.apply_image(img)
@@ -276,15 +276,15 @@ class TestTransforms(unittest.TestCase):
             self.assertEqual(
                 shape_gt,
                 result.shape,
-                'transform {} failed to pass the shape check with'
-                'params {} given input with shape {} and type {}'.format(
+                "transform {} failed to pass the shape check with"
+                "params {} given input with shape {} and type {}".format(
                     _trans_name, param, shape_str, array_type
                 ),
             )
             self.assertTrue(
                 np.allclose(result, img_gt),
-                'transform {} failed to pass the value check with'
-                'params {} given input with shape {} and type {}'.format(
+                "transform {} failed to pass the value check with"
+                "params {} given input with shape {} and type {}".format(
                     _trans_name, param, shape_str, array_type
                 ),
             )
@@ -293,13 +293,13 @@ class TestTransforms(unittest.TestCase):
         """
         Test VFlipTransform..
         """
-        _trans_name = 'VFlipTransform'
+        _trans_name = "VFlipTransform"
         params = ((0,), (1,))
 
         for (img, array_type, shape_str), param in itertools.product(
             TestTransforms._img_provider(), params
-        ):  # yapf: disable
-            gt_transformer = getattr(self, '{}_img_gt'.format(_trans_name))
+        ):
+            gt_transformer = getattr(self, "{}_img_gt".format(_trans_name))
             transformer = getattr(T, _trans_name)(*param)
 
             result = transformer.apply_image(img)
@@ -308,16 +308,16 @@ class TestTransforms(unittest.TestCase):
             self.assertEqual(
                 shape_gt,
                 result.shape,
-                'transform {} failed to pass the shape check with'
-                'params {} given input with shape {} and type {}'.format(
+                "transform {} failed to pass the shape check with"
+                "params {} given input with shape {} and type {}".format(
                     _trans_name, param, shape_str, array_type
                 ),
             )
             self.assertTrue(
                 np.allclose(result, img_gt),
-                'transform {} failed to pass the value check with'
-                'params {} given input with shape {} and type {}.\n'
-                'Output: {} -> {}'.format(
+                "transform {} failed to pass the value check with"
+                "params {} given input with shape {} and type {}.\n"
+                "Output: {} -> {}".format(
                     _trans_name, param, shape_str, array_type, result, img_gt
                 ),
             )
@@ -326,13 +326,13 @@ class TestTransforms(unittest.TestCase):
         """
         Test HFlipTransform..
         """
-        _trans_name = 'HFlipTransform'
+        _trans_name = "HFlipTransform"
         params = ((0,), (1,))
 
         for (img, array_type, shape_str), param in itertools.product(
             TestTransforms._img_provider(), params
-        ):  # yapf: disable
-            gt_transformer = getattr(self, '{}_img_gt'.format(_trans_name))
+        ):
+            gt_transformer = getattr(self, "{}_img_gt".format(_trans_name))
             transformer = getattr(T, _trans_name)(*param)
 
             result = transformer.apply_image(img)
@@ -341,16 +341,16 @@ class TestTransforms(unittest.TestCase):
             self.assertEqual(
                 shape_gt,
                 result.shape,
-                'transform {} failed to pass the shape check with'
-                'params {} given input with shape {} and type {}'.format(
+                "transform {} failed to pass the shape check with"
+                "params {} given input with shape {} and type {}".format(
                     _trans_name, param, shape_str, array_type
                 ),
             )
             self.assertTrue(
                 np.allclose(result, img_gt),
-                'transform {} failed to pass the value check with'
-                'params {} given input with shape {} and type {}.\n'
-                'Output: {} -> {}'.format(
+                "transform {} failed to pass the value check with"
+                "params {} given input with shape {} and type {}.\n"
+                "Output: {} -> {}".format(
                     _trans_name, param, shape_str, array_type, result, img_gt
                 ),
             )
@@ -359,13 +359,13 @@ class TestTransforms(unittest.TestCase):
         """
         Test NoOpTransform..
         """
-        _trans_name = 'NoOpTransform'
+        _trans_name = "NoOpTransform"
         params = ()
 
         for (img, array_type, shape_str), param in itertools.product(
             TestTransforms._img_provider(), params
-        ):  # yapf: disable
-            gt_transformer = getattr(self, '{}_img_gt'.format(_trans_name))
+        ):
+            gt_transformer = getattr(self, "{}_img_gt".format(_trans_name))
             transformer = getattr(T, _trans_name)(*param)
 
             result = transformer.apply_image(img)
@@ -374,15 +374,15 @@ class TestTransforms(unittest.TestCase):
             self.assertEqual(
                 shape_gt,
                 result.shape,
-                'transform {} failed to pass the shape check with'
-                'params {} given input with shape {} and type {}'.format(
+                "transform {} failed to pass the shape check with"
+                "params {} given input with shape {} and type {}".format(
                     _trans_name, param, shape_str, array_type
                 ),
             )
             self.assertTrue(
                 np.allclose(result, img_gt),
-                'transform {} failed to pass the value check with'
-                'params {} given input with shape {} and type {}'.format(
+                "transform {} failed to pass the value check with"
+                "params {} given input with shape {} and type {}".format(
                     _trans_name, param, shape_str, array_type
                 ),
             )
@@ -391,29 +391,29 @@ class TestTransforms(unittest.TestCase):
         """
         Test ResizeTransform.
         """
-        _trans_name = 'ResizeTransform'
+        _trans_name = "ResizeTransform"
         # Testing success cases.
         params = (
-            (10, 20, 20, 20, 'nearest'),
-            (10, 20, 10, 20, 'nearest'),
-            (10, 20, 20, 10, 'nearest'),
-            (10, 20, 1, 1, 'nearest'),
-            (10, 20, 3, 3, 'nearest'),
-            (10, 20, 5, 10, 'nearest'),
-            (10, 20, 10, 5, 'nearest'),
-            (10, 20, 20, 20, 'bilinear'),
-            (10, 20, 10, 20, 'bilinear'),
-            (10, 20, 20, 10, 'bilinear'),
-            (10, 20, 1, 1, 'bilinear'),
-            (10, 20, 3, 3, 'bilinear'),
-            (10, 20, 5, 10, 'bilinear'),
-            (10, 20, 10, 5, 'bilinear'),
+            (10, 20, 20, 20, "nearest"),
+            (10, 20, 10, 20, "nearest"),
+            (10, 20, 20, 10, "nearest"),
+            (10, 20, 1, 1, "nearest"),
+            (10, 20, 3, 3, "nearest"),
+            (10, 20, 5, 10, "nearest"),
+            (10, 20, 10, 5, "nearest"),
+            (10, 20, 20, 20, "bilinear"),
+            (10, 20, 10, 20, "bilinear"),
+            (10, 20, 20, 10, "bilinear"),
+            (10, 20, 1, 1, "bilinear"),
+            (10, 20, 3, 3, "bilinear"),
+            (10, 20, 5, 10, "bilinear"),
+            (10, 20, 10, 5, "bilinear"),
         )
 
         for (img, array_type, shape_str), param in itertools.product(
             TestTransforms._img_provider(h=10, w=20), params
-        ):  # yapf: disable
-            gt_transformer = getattr(self, '{}_img_gt'.format(_trans_name))
+        ):
+            gt_transformer = getattr(self, "{}_img_gt".format(_trans_name))
             transformer = getattr(T, _trans_name)(*param)
 
             result = transformer.apply_image(img)
@@ -423,35 +423,35 @@ class TestTransforms(unittest.TestCase):
                 self.assertEqual(
                     shape_gt,
                     result.shape,
-                    'transform {} failed to pass the shape check with'
-                    'params {} given input with shape {} and type {}'.format(
+                    "transform {} failed to pass the shape check with"
+                    "params {} given input with shape {} and type {}".format(
                         _trans_name, param, shape_str, array_type
                     ),
                 )
             if img_gt is not None:
                 self.assertTrue(
                     np.allclose(result, img_gt),
-                    'transform {} failed to pass the value check with'
-                    'params {} given input with shape {} and type {}'.format(
+                    "transform {} failed to pass the value check with"
+                    "params {} given input with shape {} and type {}".format(
                         _trans_name, param, shape_str, array_type
                     ),
                 )
 
         # Testing failure cases.
         params = (
-            (0, 0, 20, 20, 'nearest'),
-            (0, 0, 0, 0, 'nearest'),
-            (-1, 0, 0, 0, 'nearest'),
-            (0, -1, 0, 0, 'nearest'),
-            (0, 0, -1, 0, 'nearest'),
-            (0, 0, 0, -1, 'nearest'),
-            (20, 10, 0, -1, 'nearest'),
+            (0, 0, 20, 20, "nearest"),
+            (0, 0, 0, 0, "nearest"),
+            (-1, 0, 0, 0, "nearest"),
+            (0, -1, 0, 0, "nearest"),
+            (0, 0, -1, 0, "nearest"),
+            (0, 0, 0, -1, "nearest"),
+            (20, 10, 0, -1, "nearest"),
         )
 
         for (img, _, _), param in itertools.product(
             TestTransforms._img_provider(h=10, w=20), params
-        ):  # yapf: disable
-            gt_transformer = getattr(self, '{}_img_gt'.format(_trans_name))
+        ):
+            gt_transformer = getattr(self, "{}_img_gt".format(_trans_name))
             transformer = getattr(T, _trans_name)(*param)
             with self.assertRaises((RuntimeError, ValueError)):
                 result = transformer.apply_image(img)
@@ -495,7 +495,7 @@ class TestTransforms(unittest.TestCase):
                     np.random.randint(low=w_min, high=w_max, size=(n, 1)),
                 ],
                 axis=1,
-            ).astype('float32')
+            ).astype("float32")
 
     @staticmethod
     def BlendTransform_coords_gt(coords, *args) -> Tuple[np.ndarray, list]:
@@ -516,7 +516,7 @@ class TestTransforms(unittest.TestCase):
         """
         Test BlendTransform.
         """
-        _trans_name = 'BlendTransform'
+        _trans_name = "BlendTransform"
         for coords in TestTransforms._coords_provider(w_max=10, h_max=20):
             params = (
                 (coords, 0.0, 1.0),
@@ -526,7 +526,7 @@ class TestTransforms(unittest.TestCase):
                 (coords, 1.0, 0.0),
             )
             for param in params:
-                gt_transformer = getattr(self, '{}_coords_gt'.format(_trans_name))
+                gt_transformer = getattr(self, "{}_coords_gt".format(_trans_name))
                 transformer = getattr(T, _trans_name)(*param)
 
                 result = transformer.apply_coords(np.copy(coords))
@@ -535,19 +535,20 @@ class TestTransforms(unittest.TestCase):
                 self.assertEqual(
                     shape_gt,
                     result.shape,
-                    'transform {} failed to pass the shape check with'
-                    'params {} given input with shape {}'.format(_trans_name, param, result.shape),
+                    "transform {} failed to pass the shape check with"
+                    "params {} given input with shape {}".format(_trans_name, param, result.shape),
                 )
                 self.assertTrue(
                     np.allclose(result, coords_gt),
-                    'transform {} failed to pass the value check with'
-                    'params {} given input with shape {}'.format(_trans_name, param, result.shape),
+                    "transform {} failed to pass the value check with"
+                    "params {} given input with shape {}".format(_trans_name, param, result.shape),
                 )
 
                 coords_inversed = transformer.inverse().apply_coords(result)
                 self.assertTrue(
-                    np.allclose(coords_inversed, coords), "Transform {}'s inverse fails to "
-                    'produce the original coordinates.'.format(_trans_name)
+                    np.allclose(coords_inversed, coords),
+                    "Transform {}'s inverse fails to "
+                    "produce the original coordinates.".format(_trans_name),
                 )
 
     @staticmethod
@@ -571,11 +572,11 @@ class TestTransforms(unittest.TestCase):
         """
         Test VFlipTransform.
         """
-        _trans_name = 'VFlipTransform'
+        _trans_name = "VFlipTransform"
 
         params = ((20,), (30,))
         for coords, param in itertools.product(TestTransforms._coords_provider(), params):
-            gt_transformer = getattr(self, '{}_coords_gt'.format(_trans_name))
+            gt_transformer = getattr(self, "{}_coords_gt".format(_trans_name))
             transformer = getattr(T, _trans_name)(*param)
 
             result = transformer.apply_coords(np.copy(coords))
@@ -584,19 +585,20 @@ class TestTransforms(unittest.TestCase):
             self.assertEqual(
                 shape_gt,
                 result.shape,
-                'transform {} failed to pass the shape check with'
-                'params {} given input with shape {}'.format(_trans_name, param, result.shape),
+                "transform {} failed to pass the shape check with"
+                "params {} given input with shape {}".format(_trans_name, param, result.shape),
             )
             self.assertTrue(
                 np.allclose(result, coords_gt),
-                'transform {} failed to pass the value check with'
-                'params {} given input with shape {}'.format(_trans_name, param, result.shape),
+                "transform {} failed to pass the value check with"
+                "params {} given input with shape {}".format(_trans_name, param, result.shape),
             )
 
             coords_inversed = transformer.inverse().apply_coords(result)
             self.assertTrue(
-                np.allclose(coords_inversed, coords), "Transform {}'s inverse fails to "
-                'produce the original coordinates.'.format(_trans_name)
+                np.allclose(coords_inversed, coords),
+                "Transform {}'s inverse fails to "
+                "produce the original coordinates.".format(_trans_name),
             )
 
     @staticmethod
@@ -620,11 +622,11 @@ class TestTransforms(unittest.TestCase):
         """
         Test HFlipTransform.
         """
-        _trans_name = 'HFlipTransform'
+        _trans_name = "HFlipTransform"
 
         params = ((20,), (30,))
         for coords, param in itertools.product(TestTransforms._coords_provider(), params):
-            gt_transformer = getattr(self, '{}_coords_gt'.format(_trans_name))
+            gt_transformer = getattr(self, "{}_coords_gt".format(_trans_name))
             transformer = getattr(T, _trans_name)(*param)
 
             result = transformer.apply_coords(np.copy(coords))
@@ -633,19 +635,20 @@ class TestTransforms(unittest.TestCase):
             self.assertEqual(
                 shape_gt,
                 result.shape,
-                'transform {} failed to pass the shape check with'
-                'params {} given input with shape {}'.format(_trans_name, param, result.shape),
+                "transform {} failed to pass the shape check with"
+                "params {} given input with shape {}".format(_trans_name, param, result.shape),
             )
             self.assertTrue(
                 np.allclose(result, coords_gt),
-                'transform {} failed to pass the value check with'
-                'params {} given input with shape {}'.format(_trans_name, param, result.shape),
+                "transform {} failed to pass the value check with"
+                "params {} given input with shape {}".format(_trans_name, param, result.shape),
             )
 
             coords_inversed = transformer.inverse().apply_coords(result)
             self.assertTrue(
-                np.allclose(coords_inversed, coords), "Transform {}'s inverse fails to "
-                'produce the original coordinates.'.format(_trans_name)
+                np.allclose(coords_inversed, coords),
+                "Transform {}'s inverse fails to "
+                "produce the original coordinates.".format(_trans_name),
             )
 
     @staticmethod
@@ -670,7 +673,7 @@ class TestTransforms(unittest.TestCase):
         """
         Test CropTransform.
         """
-        _trans_name = 'CropTransform'
+        _trans_name = "CropTransform"
         params = (
             # (0, 0, 0, 0),
             (0, 0, 1, 1),
@@ -683,7 +686,7 @@ class TestTransforms(unittest.TestCase):
             (6, 6, 6, 6),
         )
         for coords, param in itertools.product(TestTransforms._coords_provider(), params):
-            gt_transformer = getattr(self, '{}_coords_gt'.format(_trans_name))
+            gt_transformer = getattr(self, "{}_coords_gt".format(_trans_name))
             transformer = getattr(T, _trans_name)(*param)
 
             result = transformer.apply_coords(np.copy(coords))
@@ -692,13 +695,13 @@ class TestTransforms(unittest.TestCase):
             self.assertEqual(
                 shape_gt,
                 result.shape,
-                'transform {} failed to pass the shape check with'
-                'params {} given input with shape {}'.format(_trans_name, param, result.shape),
+                "transform {} failed to pass the shape check with"
+                "params {} given input with shape {}".format(_trans_name, param, result.shape),
             )
             self.assertTrue(
                 np.allclose(result, coords_gt),
-                'transform {} failed to pass the value check with'
-                'params {} given input with shape {}'.format(_trans_name, param, result.shape),
+                "transform {} failed to pass the value check with"
+                "params {} given input with shape {}".format(_trans_name, param, result.shape),
             )
 
             with self.assertRaises((NotImplementedError,)):
@@ -727,7 +730,7 @@ class TestTransforms(unittest.TestCase):
         """
         Test ResizeTransform.
         """
-        _trans_name = 'ResizeTransform'
+        _trans_name = "ResizeTransform"
         params = (
             (10, 20, 20, 20),
             (10, 20, 10, 20),
@@ -739,8 +742,8 @@ class TestTransforms(unittest.TestCase):
         )
 
         for coords, param in itertools.product(TestTransforms._coords_provider(), params):
-            gt_transformer = getattr(self, '{}_coords_gt'.format(_trans_name))
-            transformer = getattr(T, _trans_name)(*param, interp='bilinear')
+            gt_transformer = getattr(self, "{}_coords_gt".format(_trans_name))
+            transformer = getattr(T, _trans_name)(*param, interp="bilinear")
 
             result = transformer.apply_coords(np.copy(coords))
             coords_gt, shape_gt = gt_transformer(np.copy(coords), *param)
@@ -748,19 +751,20 @@ class TestTransforms(unittest.TestCase):
             self.assertEqual(
                 shape_gt,
                 result.shape,
-                'transform {} failed to pass the shape check with'
-                'params {} given input with shape {}'.format(_trans_name, param, result.shape),
+                "transform {} failed to pass the shape check with"
+                "params {} given input with shape {}".format(_trans_name, param, result.shape),
             )
             self.assertTrue(
                 np.allclose(result, coords_gt),
-                'transform {} failed to pass the value check with'
-                'params {} given input with shape {}'.format(_trans_name, param, result.shape),
+                "transform {} failed to pass the value check with"
+                "params {} given input with shape {}".format(_trans_name, param, result.shape),
             )
 
             coords_inversed = transformer.inverse().apply_coords(result)
             self.assertTrue(
-                np.allclose(coords_inversed, coords), "Transform {}'s inverse fails to "
-                'produce the original coordinates.'.format(_trans_name)
+                np.allclose(coords_inversed, coords),
+                "Transform {}'s inverse fails to "
+                "produce the original coordinates.".format(_trans_name),
             )
 
     @staticmethod
@@ -782,7 +786,7 @@ class TestTransforms(unittest.TestCase):
         """
         Test BlendTransform.
         """
-        _trans_name = 'BlendTransform'
+        _trans_name = "BlendTransform"
         for seg in TestTransforms._seg_provider(w=10, h=20):
             params = (
                 (seg, 0.0, 1.0),
@@ -792,7 +796,7 @@ class TestTransforms(unittest.TestCase):
                 (seg, 1.0, 0.0),
             )
             for param in params:
-                gt_transformer = getattr(self, '{}_seg_gt'.format(_trans_name))
+                gt_transformer = getattr(self, "{}_seg_gt".format(_trans_name))
                 transformer = getattr(T, _trans_name)(*param)
 
                 result = transformer.apply_segmentation(seg)
@@ -801,13 +805,13 @@ class TestTransforms(unittest.TestCase):
                 self.assertEqual(
                     shape_gt,
                     result.shape,
-                    'transform {} failed to pass the shape check with'
-                    'params {} given input with shape {}'.format(_trans_name, param, result.shape),
+                    "transform {} failed to pass the shape check with"
+                    "params {} given input with shape {}".format(_trans_name, param, result.shape),
                 )
                 self.assertTrue(
                     np.allclose(result, seg_gt),
-                    'transform {} failed to pass the value check with'
-                    'params {} given input with shape {}'.format(_trans_name, param, result.shape),
+                    "transform {} failed to pass the value check with"
+                    "params {} given input with shape {}".format(_trans_name, param, result.shape),
                 )
 
     @staticmethod
@@ -824,14 +828,14 @@ class TestTransforms(unittest.TestCase):
             (list): expected shape of the output array.
         """
         h, w, new_h, new_w = args
-        resized_seg = cv2.resize(seg, (new_w, new_h), interpolation=CV2_INTER_CODES['nearest'])
+        resized_seg = cv2.resize(seg, (new_w, new_h), interpolation=CV2_INTER_CODES["nearest"])
         return resized_seg, resized_seg.shape
 
     def test_resize_seg_transforms(self):
         """
         Test ResizeTransform.
         """
-        _trans_name = 'ResizeTransform'
+        _trans_name = "ResizeTransform"
         params = (
             (10, 20, 20, 20),
             (10, 20, 10, 20),
@@ -843,8 +847,8 @@ class TestTransforms(unittest.TestCase):
         )
 
         for seg, param in itertools.product(TestTransforms._seg_provider(h=10, w=20), params):
-            gt_transformer = getattr(self, '{}_seg_gt'.format(_trans_name))
-            transformer = getattr(T, _trans_name)(*param, interp='bilinear')
+            gt_transformer = getattr(self, "{}_seg_gt".format(_trans_name))
+            transformer = getattr(T, _trans_name)(*param, interp="bilinear")
 
             result = transformer.apply_segmentation(seg)
             seg_gt, shape_gt = gt_transformer(seg, *param)
@@ -853,14 +857,14 @@ class TestTransforms(unittest.TestCase):
                 self.assertEqual(
                     shape_gt,
                     result.shape,
-                    'transform {} failed to pass the shape check with'
-                    'params {} given input with shape {}'.format(_trans_name, param, result.shape),
+                    "transform {} failed to pass the shape check with"
+                    "params {} given input with shape {}".format(_trans_name, param, result.shape),
                 )
             if seg_gt is not None:
                 self.assertTrue(
                     np.allclose(result, seg_gt),
-                    'transform {} failed to pass the value check with'
-                    'params {} given input with shape {}'.format(_trans_name, param, result.shape),
+                    "transform {} failed to pass the value check with"
+                    "params {} given input with shape {}".format(_trans_name, param, result.shape),
                 )
 
         # Testing failure cases.
@@ -874,8 +878,8 @@ class TestTransforms(unittest.TestCase):
             (20, 10, 0, -1),
         )
         for seg, param in itertools.product(TestTransforms._seg_provider(w=10, h=20), params):
-            gt_transformer = getattr(self, '{}_seg_gt'.format(_trans_name))
-            transformer = getattr(T, _trans_name)(*param, interp='bilinear')
+            gt_transformer = getattr(self, "{}_seg_gt".format(_trans_name))
+            transformer = getattr(T, _trans_name)(*param, interp="bilinear")
             with self.assertRaises((RuntimeError, ValueError, cv2.error)):
                 result = transformer.apply_image(seg)
 
@@ -898,11 +902,11 @@ class TestTransforms(unittest.TestCase):
         """
         Test NoOpTransform..
         """
-        _trans_name = 'NoOpTransform'
+        _trans_name = "NoOpTransform"
         params = ()
 
         for coords, param in itertools.product(TestTransforms._coords_provider(), params):
-            gt_transformer = getattr(self, '{}_coords_gt'.format(_trans_name))
+            gt_transformer = getattr(self, "{}_coords_gt".format(_trans_name))
             transformer = getattr(T, _trans_name)(*param)
 
             result = transformer.apply_coords(np.copy(coords))
@@ -911,19 +915,20 @@ class TestTransforms(unittest.TestCase):
             self.assertEqual(
                 shape_gt,
                 result.shape,
-                'transform {} failed to pass the shape check with'
-                'params {} given input with shape {}'.format(_trans_name, param, result.shape),
+                "transform {} failed to pass the shape check with"
+                "params {} given input with shape {}".format(_trans_name, param, result.shape),
             )
             self.assertTrue(
                 np.allclose(result, coords_gt),
-                'transform {} failed to pass the value check with'
-                'params {} given input with shape {}'.format(_trans_name, param, result.shape),
+                "transform {} failed to pass the value check with"
+                "params {} given input with shape {}".format(_trans_name, param, result.shape),
             )
 
             coords_inversed = transformer.inverse().apply_coords(result)
             self.assertTrue(
-                np.allclose(coords_inversed, coords), "Transform {}'s inverse fails to "
-                'produce the original coordinates.'.format(_trans_name)
+                np.allclose(coords_inversed, coords),
+                "Transform {}'s inverse fails to "
+                "produce the original coordinates.".format(_trans_name),
             )
 
     def test_transformlist_flatten(self):
@@ -935,10 +940,10 @@ class TestTransforms(unittest.TestCase):
 
     def test_print_transform(self):
         t0 = T.HFlipTransform(width=100)
-        self.assertEqual(str(t0), 'HFlipTransform(width=100)')
+        self.assertEqual(str(t0), "HFlipTransform(width=100)")
 
         t = T.TransformList([T.NoOpTransform(), t0])
-        self.assertEqual(str(t), f'TransformList[NoOpTransform(), {t0}]')
+        self.assertEqual(str(t), f"TransformList[NoOpTransform(), {t0}]")
 
         t = T.BlendTransform(np.zeros((100, 100, 100)), 1.0, 1.0)
-        self.assertEqual(str(t), 'BlendTransform(src_image=..., src_weight=1.0, dst_weight=1.0)')
+        self.assertEqual(str(t), "BlendTransform(src_image=..., src_weight=1.0, dst_weight=1.0)")

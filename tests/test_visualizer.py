@@ -18,11 +18,10 @@ from foundation.visualization import Visualizer, random_color
 
 
 class TestVisualizer(unittest.TestCase):
-
     def setUp(self) -> None:
         super().setUp()
         np.random.seed(12)
-        self.data_root = osp.join(osp.dirname(__file__), './data')
+        self.data_root = osp.join(osp.dirname(__file__), "./data")
 
     def _random_data(
         self,
@@ -100,37 +99,37 @@ class TestVisualizer(unittest.TestCase):
             return [np.asarray(x).reshape(-1, 2) for x in m]
         elif isinstance(m, dict):
             # RLEs
-            assert 'counts' in m and 'size' in m
-            if isinstance(m['counts'], list):  # uncompressed RLEs
-                h, w = m['size']
+            assert "counts" in m and "size" in m
+            if isinstance(m["counts"], list):  # uncompressed RLEs
+                h, w = m["size"]
                 m = mask_util.frPyObjects(m, h, w)
             return mask_util.decode(m)[:, :]
         else:
             raise TypeError(
-                'segmentation should be list or dict. Got {}'.format(type(segmentation))
+                "segmentation should be list or dict. Got {}".format(type(segmentation))
             )
 
     def _draw_and_save_coco_instances(self, c: COCO, scale: float) -> None:
         cat_ids = c.getCatIds()
         cat_info_list = c.loadCats(cat_ids)
-        cat_id_to_name = {x['id']: x['name'] for x in cat_info_list}
+        cat_id_to_name = {x["id"]: x["name"] for x in cat_info_list}
 
         for img_id in sorted(c.getImgIds()):
             img_info = c.loadImgs(img_id)[0]
 
-            file_name = img_info['file_name']
-            img = cv2.imread(osp.join(self.data_root, img_info['file_name']))[:, :, ::-1]
+            file_name = img_info["file_name"]
+            img = cv2.imread(osp.join(self.data_root, img_info["file_name"]))[:, :, ::-1]
             v = Visualizer(img, scale=scale)
 
             ann_ids = c.getAnnIds(img_id)
             anns = c.loadAnns(ann_ids)
             for ann in anns:
-                label = cat_id_to_name[ann['category_id']]
+                label = cat_id_to_name[ann["category_id"]]
                 color = tuple(random_color(rgb=True, maximum=1))
 
-                x, y, w, h = ann['bbox']
+                x, y, w, h = ann["bbox"]
                 v.draw_box((x, y, x + w, y + h), label=label, edge_color=color)
-                segmentation = self._convert_segmentation(ann['segmentation'])
+                segmentation = self._convert_segmentation(ann["segmentation"])
 
                 if isinstance(segmentation, list):
                     for p in segmentation:
@@ -138,11 +137,11 @@ class TestVisualizer(unittest.TestCase):
                 else:
                     v.draw_binary_mask(segmentation, color=color)
 
-            save_filename = '{}_{}.jpg'.format(file_name[:-4], scale)
-            v.output.save(osp.join(osp.dirname(__file__), 'outputs', save_filename))
+            save_filename = "{}_{}.jpg".format(file_name[:-4], scale)
+            v.output.save(osp.join(osp.dirname(__file__), "outputs", save_filename))
 
     def test_draw_coco_instances(self) -> None:
-        inst_ann_file = osp.join(self.data_root, 'instances_val2014_demo.json')
+        inst_ann_file = osp.join(self.data_root, "instances_val2014_demo.json")
         with contextlib.redirect_stdout(io.StringIO()):
             c = COCO(inst_ann_file)
 

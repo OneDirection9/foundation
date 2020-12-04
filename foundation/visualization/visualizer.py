@@ -16,7 +16,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 from .colormap import random_color
 
-__all__ = ['Visualizer']
+__all__ = ["Visualizer"]
 
 ColorVector = Tuple[float, float, float]  # RGB
 MPLColor = Union[str, ColorVector]
@@ -29,7 +29,6 @@ _LARGE_MASK_AREA_THRESH = 12000
 
 
 class VisImage(object):
-
     def __init__(self, img: np.ndarray, scale: float = 1.0) -> None:
         """
         Args:
@@ -37,9 +36,9 @@ class VisImage(object):
             scale (float): Scale the input image.
         """
         if not isinstance(img, np.ndarray):
-            raise TypeError('image should be np.ndarray. Got {}'.format(type(img)))
+            raise TypeError("image should be np.ndarray. Got {}".format(type(img)))
         if img.ndim != 3 or img.shape[-1] != 3:
-            raise ValueError('image should be of shape HxWx3. Got {}'.format(img.shape))
+            raise ValueError("image should be of shape HxWx3. Got {}".format(img.shape))
 
         self.img = img
         self.scale = scale
@@ -63,9 +62,9 @@ class VisImage(object):
         canvas = FigureCanvasAgg(fig)
         # self.canvas = mpl.backends.backend_cairo.FigureCanvasCairo(fig)
         ax = fig.add_axes([0.0, 0.0, 1.0, 1.0])
-        ax.axis('off')
+        ax.axis("off")
         # Need to show this first so that other patches can be drawn on top
-        ax.imshow(self.img, extent=(0, self.width, self.height, 0), interpolation='nearest')
+        ax.imshow(self.img, extent=(0, self.width, self.height, 0), interpolation="nearest")
 
         return fig, ax, canvas
 
@@ -89,23 +88,23 @@ class VisImage(object):
         # width, height = self.width, self.height
         # s = buf.getvalue()
 
-        buffer = np.frombuffer(s, dtype='uint8')
+        buffer = np.frombuffer(s, dtype="uint8")
 
         img_rgba = buffer.reshape(height, width, 4)
         rgb, alpha = np.split(img_rgba, [3], axis=2)
-        return rgb.astype('uint8')
+        return rgb.astype("uint8")
 
 
 class Visualizer(object):
     """Visualizer that draws data about detection/segmentation on images.
 
-   It contains methods like `draw_{text,box,circle,line,binary_mask,polygon}` that draw primitive
-   objects to images. Implementing high-level wrappers to draw custom data in some pre-defined
-   style.
+    It contains methods like `draw_{text,box,circle,line,binary_mask,polygon}` that draw primitive
+    objects to images. Implementing high-level wrappers to draw custom data in some pre-defined
+    style.
 
-   This visualizer focuses on high rendering quality rather than performance. It is not
-   designed to be used for real-time applications.
-   """
+    This visualizer focuses on high rendering quality rather than performance. It is not
+    designed to be used for real-time applications.
+    """
 
     def __init__(self, img_rgb: np.ndarray, scale: float = 1.0):
         """
@@ -130,10 +129,10 @@ class Visualizer(object):
         text: str,
         position: PointCoordinate,
         *,
-        color: MPLColor = 'g',
+        color: MPLColor = "g",
         font_size: Optional[int] = None,
-        horizontal_alignment: str = 'center',
-        rotation: float = 0.,
+        horizontal_alignment: str = "center",
+        rotation: float = 0.0,
     ) -> VisImage:
         """
         Args:
@@ -162,14 +161,9 @@ class Visualizer(object):
             y,
             text,
             size=font_size * self.output.scale,
-            family='sans-serif',
-            bbox={
-                'facecolor': 'black',
-                'alpha': 0.8,
-                'pad': 0.7,
-                'edgecolor': 'none'
-            },
-            verticalalignment='top',
+            family="sans-serif",
+            bbox={"facecolor": "black", "alpha": 0.8, "pad": 0.7, "edgecolor": "none"},
+            verticalalignment="top",
             horizontalalignment=horizontal_alignment,
             color=color,
             zorder=10,
@@ -182,8 +176,8 @@ class Visualizer(object):
         box_coord: BoxCoordinate,
         *,
         alpha: float = 0.5,
-        edge_color: MPLColor = 'g',
-        line_style: str = '-',
+        edge_color: MPLColor = "g",
+        line_style: str = "-",
         label: Optional[str] = None,
     ) -> VisImage:
         """
@@ -230,7 +224,7 @@ class Visualizer(object):
                 label,
                 (x0, y0),
                 color=label_color,
-                horizontal_alignment='left',
+                horizontal_alignment="left",
                 font_size=font_size,
             )
         return self.output
@@ -239,8 +233,8 @@ class Visualizer(object):
         self,
         rotated_box: RotatedBoxCoordinate,
         *,
-        edge_color: MPLColor = 'g',
-        line_style: str = '-',
+        edge_color: MPLColor = "g",
+        line_style: str = "-",
         label: Optional[str] = None,
     ) -> VisImage:
         """
@@ -276,7 +270,7 @@ class Visualizer(object):
                 [rotated_rect[k][0], rotated_rect[j][0]],
                 [rotated_rect[k][1], rotated_rect[j][1]],
                 color=edge_color,
-                linestyle='--' if k == 1 else line_style,
+                linestyle="--" if k == 1 else line_style,
                 linewidth=linewidth,
             )
 
@@ -315,7 +309,7 @@ class Visualizer(object):
         x_data: Sequence[float],
         y_data: Sequence[float],
         color: MPLColor,
-        linestyle: str = '-',
+        linestyle: str = "-",
         linewidth: Optional[float] = None,
     ) -> VisImage:
         """
@@ -368,19 +362,19 @@ class Visualizer(object):
             output (VisImage): Image object with mask drawn.
         """
         if not isinstance(binary_mask, np.ndarray):
-            raise TypeError('binary_mask should be np.ndarray. Got {}'.format(type(binary_mask)))
+            raise TypeError("binary_mask should be np.ndarray. Got {}".format(type(binary_mask)))
         if binary_mask.ndim != 2:
-            raise ValueError('binary_mask should be 2D. Got {}D'.format(binary_mask.ndim))
+            raise ValueError("binary_mask should be 2D. Got {}D".format(binary_mask.ndim))
 
         if color is None:
             color = random_color(rgb=True, maximum=1)
 
-        binary_mask = binary_mask.astype('uint8')  # opencv needs uint8
+        binary_mask = binary_mask.astype("uint8")  # opencv needs uint8
         shape2d = (binary_mask.shape[0], binary_mask.shape[1])
 
-        rgba = np.zeros(shape2d + (4,), dtype='float32')
+        rgba = np.zeros(shape2d + (4,), dtype="float32")
         rgba[:, :, :3] = color
-        rgba[:, :, 3] = (binary_mask == 1).astype('float32') * alpha
+        rgba[:, :, 3] = (binary_mask == 1).astype("float32") * alpha
         self.output.ax.imshow(rgba)
 
         if label is not None:
@@ -403,7 +397,7 @@ class Visualizer(object):
         segment: np.ndarray,
         color: Optional[MPLColor] = None,
         edge_color: Optional[MPLColor] = None,
-        alpha: float = 0.5
+        alpha: float = 0.5,
     ) -> VisImage:
         """
         Args:
@@ -419,9 +413,9 @@ class Visualizer(object):
             output (VisImage): Image object with polygon drawn.
         """
         if not isinstance(segment, np.ndarray):
-            raise TypeError('segment should be np.ndarray. Got {}'.format(type(segment)))
+            raise TypeError("segment should be np.ndarray. Got {}".format(type(segment)))
         if segment.ndim != 2 or segment.shape[1] != 2:
-            raise ValueError('segment should be of shape Nx2. Got {}'.format(segment.shape))
+            raise ValueError("segment should be of shape Nx2. Got {}".format(segment.shape))
 
         if color is None:
             color = random_color(rgb=True, maximum=1)
@@ -473,7 +467,7 @@ class Visualizer(object):
         Args:
             mask: The array with dtype np.bool. If provided, the colors in masked area will be kept.
         """
-        img_bw = self.img.astype('f4').mean(axis=2)
+        img_bw = self.img.astype("f4").mean(axis=2)
         img_bw = np.stack([img_bw] * 3, axis=2)
         if mask is not None:
             img_bw[mask] = self.img[mask]
@@ -495,7 +489,7 @@ class Visualizer(object):
                 the tuple is in the [0.0, 1.0] range.
         """
         if not -1.0 <= brightness_factor <= 1.0:
-            raise ValueError('brightness_factor should be in range [-1, 1]')
+            raise ValueError("brightness_factor should be in range [-1, 1]")
 
         color = mplc.to_rgb(color)
         polygon_color = colorsys.rgb_to_hls(*mplc.to_rgb(color))

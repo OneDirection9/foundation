@@ -11,7 +11,7 @@ from tabulate import tabulate
 
 logger = logging.getLogger(__name__)
 
-__all__ = ['Registry', 'build']
+__all__ = ["Registry", "build"]
 
 
 class Registry(object):
@@ -65,7 +65,7 @@ class Registry(object):
     def _register(self, name: str, obj: Any) -> None:
         # TODO: consider adding inspection of specific class
         if not isinstance(name, six.string_types) or not name:
-            raise TypeError('Registered name must be non-empty string')
+            raise TypeError("Registered name must be non-empty string")
 
         if name in self._registry:
             raise KeyError(
@@ -113,9 +113,9 @@ class Registry(object):
         return key in self._registry
 
     def __repr__(self) -> str:
-        table_headers = ['Names', 'Objects']
-        table = tabulate(self._registry.items(), headers=table_headers, tablefmt='fancy_grid')
-        return 'Registry of {}:\n'.format(self._name) + table
+        table_headers = ["Names", "Objects"]
+        table = tabulate(self._registry.items(), headers=table_headers, tablefmt="fancy_grid")
+        return "Registry of {}:\n".format(self._name) + table
 
     __str__ = __repr__
 
@@ -131,15 +131,15 @@ def build(registry: Registry, cfg: Dict[str, Any]) -> Any:
         The constructed object.
     """
     if not isinstance(cfg, dict):
-        raise TypeError('cfg should be dictionary. Got {}'.format(type(cfg)))
+        raise TypeError("cfg should be dictionary. Got {}".format(type(cfg)))
 
     _cfg = copy.deepcopy(cfg)
 
     try:
-        obj_name = _cfg.pop('name')
+        obj_name = _cfg.pop("name")
         obj = registry.get(obj_name)
         # TODO: support other type
-        assert inspect.isclass(obj), 'build only support build instance from class'
+        assert inspect.isclass(obj), "build only support build instance from class"
         return obj(**_cfg)
     except Exception as e:
         logger.error("Failed to build object from '{}' with cfg={}".format(registry.name, cfg))

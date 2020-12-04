@@ -2,13 +2,13 @@
 
 import torch
 
-__all__ = ['giou_loss']
+__all__ = ["giou_loss"]
 
 
 def giou_loss(
     boxes1: torch.Tensor,
     boxes2: torch.Tensor,
-    reduction: str = 'none',
+    reduction: str = "none",
     eps: float = 1e-7,
 ) -> torch.Tensor:
     """
@@ -31,8 +31,8 @@ def giou_loss(
     x1, y1, x2, y2 = boxes1.unbind(dim=-1)
     x1g, y1g, x2g, y2g = boxes2.unbind(dim=-1)
 
-    assert (x2 >= x1).all(), 'bad box: x1 larger than x2'
-    assert (y2 >= y1).all(), 'bad box: y1 larger than y2'
+    assert (x2 >= x1).all(), "bad box: x1 larger than x2"
+    assert (y2 >= y1).all(), "bad box: y1 larger than y2"
 
     # Intersection keypoints
     xkis1 = torch.max(x1, x1g)
@@ -57,9 +57,9 @@ def giou_loss(
 
     loss = 1 - miouk
 
-    if reduction == 'mean':
+    if reduction == "mean":
         loss = loss.mean()
-    elif reduction == 'sum':
+    elif reduction == "sum":
         loss = loss.sum()
 
     return loss

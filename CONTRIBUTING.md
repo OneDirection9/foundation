@@ -22,12 +22,12 @@ We adopt [PEP8](https://www.python.org/dev/peps/pep-0008/) as the preferred code
 
 We use the following tools for linting and formatting:
 - [flake8](http://flake8.pycqa.org/en/latest/): linter
-- [yapf](https://github.com/google/yapf): formatter
+- [black](https://github.com/psf/black.git): formatter
 - [isort](https://github.com/timothycrosley/isort): sort imports
 
-Style configurations of yapf and isort can be found in [setup.cfg](./setup.cfg).
+Style configurations of flake8 and isort can be found in [setup.cfg](./setup.cfg).
 
-We use [pre-commit hook](https://pre-commit.com/) that checks and formats for `flake8`, `yapf`, `isort`, `trailing whitespaces`,
+We use [pre-commit hook](https://pre-commit.com/) that checks and formats for `flake8`, `black`, `isort`, `trailing whitespaces`,
  fixes `end-of-files`, sorts `requirments.txt` automatically on every commit.
 The config for a pre-commit hook is stored in [.pre-commit-config](./.pre-commit-config.yaml).
 
@@ -44,7 +44,7 @@ pre-commit install
 
 After this on every commit check code linters and formatter will be enforced.
 
->Before you create a PR, make sure that your code lints and is formatted by yapf.
+>Before you create a PR, make sure that your code lints and is formatted by black.
 
 ### C++ and CUDA
 

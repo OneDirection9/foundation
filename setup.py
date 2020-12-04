@@ -26,7 +26,6 @@ install_requires = [
     "portalocker",
     "six",
     "torch>=1.5.1",
-    "shapely",
     "yacs>=0.1.6",
     "pyyaml>=5.1",
     "tqdm",

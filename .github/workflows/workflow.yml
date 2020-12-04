@@ -35,7 +35,7 @@ jobs:
         echo "Runing isort"
         isort --check-only --sp . foundation/ tests/
         echo "Runing black"
-        black -l 100 foundation/ tests/
+        black foundation/ tests/
 
   test:
 

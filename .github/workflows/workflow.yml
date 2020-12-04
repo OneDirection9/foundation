@@ -52,6 +52,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Build and install
       run: |
+        python -m pip install --upgrade pip
         rm -rf .eggs && pip install -e .[all]
     - name: Test
       run: |

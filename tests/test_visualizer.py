@@ -5,6 +5,7 @@ from __future__ import absolute_import, division, print_function
 
 import contextlib
 import io
+import os
 import os.path as osp
 import unittest
 from typing import List, Tuple, Union
@@ -138,7 +139,9 @@ class TestVisualizer(unittest.TestCase):
                     v.draw_binary_mask(segmentation, color=color)
 
             save_filename = "{}_{}.jpg".format(file_name[:-4], scale)
-            v.output.save(osp.join(osp.dirname(__file__), "outputs", save_filename))
+            output_dir = osp.join(osp.dirname(__file__), "outputs")
+            os.makedirs(output_dir, exist_ok=True)
+            v.output.save(osp.join(output_dir, save_filename))
 
     def test_draw_coco_instances(self) -> None:
         inst_ann_file = osp.join(self.data_root, "instances_val2014_demo.json")

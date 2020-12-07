@@ -53,7 +53,7 @@ jobs:
     - name: Build and install
       run: |
         python -m pip install --upgrade pip
-        rm -rf .eggs && python -m pip install -e .[all]
+        rm -rf .eggs && CC=clang CXX=clang++ python -m pip install -e .[all]
     - name: Test
       run: |
         python -m unittest discover -v -s tests

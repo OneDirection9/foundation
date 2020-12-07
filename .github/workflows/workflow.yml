@@ -72,6 +72,6 @@ jobs:
         python -m pip install ninja opencv-python-headless onnx pytest-xdist
         python -m pip install torch==${{matrix.torch}} torchvision==${{matrix.torchvision}} -f https://download.pytorch.org/whl/torch_stable.html
     - name: Build and install
-      run: rm -rf .eggs && CC=clang CXX=clang++ python -m pip install -e .[all]
+      run: CC=clang CXX=clang++ python -m pip install -e .[all]
     - name: Run unittests
-      run: python -m unittest discover -v -s tests
+      run: python -m pytest -n 4 -v tests/

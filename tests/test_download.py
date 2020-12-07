@@ -7,10 +7,10 @@ from foundation.common.download import download
 
 
 class TestDownload(unittest.TestCase):
-    _filename = 'facebook.html'
+    _filename = "facebook.html"
 
     def test_download(self) -> None:
-        download('https://www.facebook.com', '.', filename=self._filename, progress=False)
+        download("https://www.facebook.com", ".", filename=self._filename, progress=False)
         self.assertTrue(os.path.isfile(self._filename))
 
     def tearDown(self) -> None:

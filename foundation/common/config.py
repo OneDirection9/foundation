@@ -11,7 +11,7 @@ from yacs.config import CfgNode as _CfgNode
 
 from .file_io import PathManager
 
-BASE_KEY = '_BASE_'
+BASE_KEY = "_BASE_"
 
 
 class CfgNode(_CfgNode):
@@ -48,7 +48,7 @@ class CfgNode(_CfgNode):
         Returns:
             (dict): the loaded yaml
         """
-        with PathManager.open(filename, 'r') as f:
+        with PathManager.open(filename, "r") as f:
             try:
                 cfg = yaml.safe_load(f)
             except yaml.constructor.ConstructorError:
@@ -56,11 +56,11 @@ class CfgNode(_CfgNode):
                     raise
                 logger = logging.getLogger(__name__)
                 logger.warning(
-                    'Loading config {} with yaml.unsafe_load. Your machine may '
-                    'be at risk if the file contains malicious content.'.format(filename)
+                    "Loading config {} with yaml.unsafe_load. Your machine may "
+                    "be at risk if the file contains malicious content.".format(filename)
                 )
                 f.close()
-                with PathManager.open(filename, 'r') as f:
+                with PathManager.open(filename, "r") as f:
                     cfg = yaml.unsafe_load(f)  # pyre-ignore
 
         def merge_a_into_b(a: Dict[Any, Any], b: Dict[Any, Any]) -> None:
@@ -72,11 +72,12 @@ class CfgNode(_CfgNode):
                 else:
                     b[k] = v
 
-        if BASE_KEY in cfg:
+        # cfg is None when the yaml file is empty
+        if cfg is not None and BASE_KEY in cfg:
             base_cfg_file = cfg[BASE_KEY]
-            if base_cfg_file.startswith('~'):
+            if base_cfg_file.startswith("~"):
                 base_cfg_file = os.path.expanduser(base_cfg_file)
-            if not any(map(base_cfg_file.startswith, ['/', 'https://', 'http://'])):
+            if not any(map(base_cfg_file.startswith, ["/", "https://", "http://"])):
                 # the path to base cfg is relative to the config file itself.
                 base_cfg_file = os.path.join(os.path.dirname(filename), base_cfg_file)
             base_cfg = CfgNode.load_yaml_with_base(base_cfg_file, allow_unsafe=allow_unsafe)
@@ -105,8 +106,9 @@ class CfgNode(_CfgNode):
         Args:
             cfg_other (CfgNode): configs to merge from.
         """
-        assert BASE_KEY not in cfg_other, \
-            "The reserved key '{}' can only be used in files!".format(BASE_KEY)
+        assert BASE_KEY not in cfg_other, "The reserved key '{}' can only be used in files!".format(
+            BASE_KEY
+        )
         return super().merge_from_other_cfg(cfg_other)
 
     def merge_from_list(self, cfg_list: List[object]) -> Callable[[], None]:
@@ -115,19 +117,20 @@ class CfgNode(_CfgNode):
             cfg_list (list): list of configs to merge from.
         """
         keys = set(cfg_list[0::2])
-        assert BASE_KEY not in keys, \
-            "The reserved key '{}' can only be used in files!".format(BASE_KEY)
+        assert BASE_KEY not in keys, "The reserved key '{}' can only be used in files!".format(
+            BASE_KEY
+        )
         return super().merge_from_list(cfg_list)
 
     def __setattr__(self, name: str, val: Any) -> None:  # pyre-ignore
-        if name.startswith('COMPUTED_'):
+        if name.startswith("COMPUTED_"):
             if name in self:
                 old_val = self[name]
                 if old_val == val:
                     return
                 raise KeyError(
                     "Computed attributed '{}' already exists "
-                    'with a different value! old={}, new={}.'.format(name, old_val, val)
+                    "with a different value! old={}, new={}.".format(name, old_val, val)
                 )
             self[name] = val
         else:

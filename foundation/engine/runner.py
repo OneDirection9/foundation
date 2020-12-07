@@ -8,7 +8,7 @@ from typing import NoReturn, Sequence
 
 from .hook import BaseHook
 
-__all__ = ['BaseRunner']
+__all__ = ["BaseRunner"]
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ class BaseRunner(object):
         """
         for hook in hooks:
             if not isinstance(hook, BaseHook):
-                raise TypeError('hook should be BaseHook. Got {}'.format(type(hook)))
+                raise TypeError("hook should be BaseHook. Got {}".format(type(hook)))
             self._hooks.append(hook)
 
     def train(self, start_iter: int, max_iter: int) -> None:
@@ -63,7 +63,7 @@ class BaseRunner(object):
         Args:
             start_iter, max_iter: See docs above.
         """
-        logger.info('Starting training from iteration {}'.format(start_iter))
+        logger.info("Starting training from iteration {}".format(start_iter))
 
         self._iter = self._start_iter = start_iter
         self._max_iter = max_iter
@@ -75,7 +75,7 @@ class BaseRunner(object):
                 self.run_step()
                 self.after_step()
         except Exception as e:
-            logger.exception('Exception during training:')
+            logger.exception("Exception during training:")
             raise e
         finally:
             self.after_train()

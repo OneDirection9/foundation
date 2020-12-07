@@ -7,7 +7,7 @@ import shutil
 from typing import Callable, List, Optional
 from urllib import request
 
-__all__ = ['download']
+__all__ = ["download"]
 
 logger = logging.getLogger(__name__)
 
@@ -29,17 +29,17 @@ def download(url: str, dir: str, *, filename: Optional[str] = None, progress: bo
     """
     os.makedirs(dir, exist_ok=True)
     if filename is None:
-        filename = url.split('/')[-1]
-        assert len(filename), 'Cannot obtain filename from url {}'.format(url)
+        filename = url.split("/")[-1]
+        assert len(filename), "Cannot obtain filename from url {}".format(url)
     fpath = os.path.join(dir, filename)
 
     if os.path.isfile(fpath):
-        logger.info('File {} exists! Skipping download.'.format(filename))
+        logger.info("File {} exists! Skipping download.".format(filename))
         return fpath
 
-    tmp = fpath + '.tmp'  # download to a tmp file first, to be more atomic.
+    tmp = fpath + ".tmp"  # download to a tmp file first, to be more atomic.
     try:
-        logger.info('Downloading from {} ...'.format(url))
+        logger.info("Downloading from {} ...".format(url))
         if progress:
             import tqdm
 
@@ -55,7 +55,7 @@ def download(url: str, dir: str, *, filename: Optional[str] = None, progress: bo
                 return inner
 
             with tqdm.tqdm(  # type: ignore
-                unit='B', unit_scale=True, miniters=1, desc=filename, leave=True
+                unit="B", unit_scale=True, miniters=1, desc=filename, leave=True
             ) as t:
                 tmp, _ = request.urlretrieve(url, filename=tmp, reporthook=hook(t))
 
@@ -64,12 +64,12 @@ def download(url: str, dir: str, *, filename: Optional[str] = None, progress: bo
         statinfo = os.stat(tmp)
         size = statinfo.st_size
         if size == 0:
-            raise IOError('Downloaded an empty file from {}!'.format(url))
+            raise IOError("Downloaded an empty file from {}!".format(url))
         # download to tmp first and move to fpath, to make this function more
         # atomic.
         shutil.move(tmp, fpath)
     except IOError:
-        logger.error('Failed to download {}'.format(url))
+        logger.error("Failed to download {}".format(url))
         raise
     finally:
         try:
@@ -77,5 +77,5 @@ def download(url: str, dir: str, *, filename: Optional[str] = None, progress: bo
         except IOError:
             pass
 
-    logger.info('Successfully downloaded ' + fpath + '. ' + str(size) + ' bytes.')
+    logger.info("Successfully downloaded " + fpath + ". " + str(size) + " bytes.")
     return fpath

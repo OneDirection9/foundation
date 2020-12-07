@@ -9,7 +9,6 @@ from foundation.nn import giou_loss
 
 
 class TestGIoULoss(unittest.TestCase):
-
     def setUp(self) -> None:
         super().setUp()
         np.random.seed(42)
@@ -41,8 +40,8 @@ class TestGIoULoss(unittest.TestCase):
         box1s = torch.stack([box2, box2], dim=0)
         box2s = torch.stack([box3, box4], dim=0)
 
-        loss = giou_loss(box1s, box2s, reduction='sum')
+        loss = giou_loss(box1s, box2s, reduction="sum")
         self.assertTrue(np.allclose(loss, [2.5]))
 
-        loss = giou_loss(box1s, box2s, reduction='mean')
+        loss = giou_loss(box1s, box2s, reduction="mean")
         self.assertTrue(np.allclose(loss, [1.25]))

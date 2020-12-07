@@ -10,12 +10,12 @@ on:
     branches: [ master ]
 
 jobs:
-  lint:
+  linter:
 
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [3.6]
 
     steps:
     - uses: actions/checkout@v2
@@ -26,23 +26,32 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 yapf isort
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        python -m pip install flake8==3.8.4 flake8-bugbear flake8-comprehensions
+        python -m pip install isort==5.6.4 black==20.8b1
+        if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
     - name: Lint
       run: |
         echo "Runing flake8"
         flake8 foundation/ tests/
         echo "Runing isort"
-        isort --check-only --diff foundation/ tests/
-        echo "Runing yapf"
-        yapf -r -d foundation/ tests/
+        isort --check-only foundation/ tests/
+        echo "Runing black"
+        black foundation/ tests/
 
   test:
 
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [3.6]
+        torch: [1.5, 1.6, 1.7]
+        include:
+          - torch: 1.5
+            torchvision: 0.6
+          - torch: 1.6
+            torchvision: 0.7
+          - torch: 1.7
+            torchvision: 0.8
 
     steps:
     - uses: actions/checkout@v2
@@ -50,9 +59,19 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Cache dependencies
+      uses: actions/cache@v2
+      with:
+        path: |
+          ${{ env.pythonLocation }}/lib/python3.6/site-packages
+          ~/.torch
+        key: ${{ runner.os }}-torch${{ matrix.torch }}-${{ hashFiles('setup.py') }}-2020070
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install pytest-xdist
+        python -m pip install torch==${{matrix.torch}} torchvision==${{matrix.torchvision}} -f https://download.pytorch.org/whl/torch_stable.html
     - name: Build and install
-      run: |
-        rm -rf .eggs && pip install -e .[all]
-    - name: Test
-      run: |
-        python -m unittest discover -v -s tests
+      run: CC=clang CXX=clang++ python -m pip install -e .[all]
+    - name: Run unittests
+      run: python -m pytest -n 4 -v tests/

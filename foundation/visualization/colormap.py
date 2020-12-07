@@ -9,10 +9,10 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-__all__ = ['colormap', 'random_color']
+__all__ = ["colormap", "random_color"]
 
 # RGB:
-# yapf: disable
+# fmt: off
 _COLORS = np.array(
     [
         0.000, 0.447, 0.741,
@@ -91,7 +91,7 @@ _COLORS = np.array(
         1.000, 1.000, 1.000
     ]
 ).astype(np.float32).reshape(-1, 3)
-# yapf: enable
+# fmt: on
 
 
 def colormap(rgb: bool = False, maximum: int = 255) -> np.ndarray:
@@ -104,7 +104,7 @@ def colormap(rgb: bool = False, maximum: int = 255) -> np.ndarray:
         A float32 array of Nx3 colors, in range [0, 1] or [0, 255].
     """
     if maximum not in (1, 255):
-        raise ValueError('maximum should be 1 or 255. Got {}'.format(maximum))
+        raise ValueError("maximum should be 1 or 255. Got {}".format(maximum))
 
     c = _COLORS * maximum
     if not rgb:
@@ -122,7 +122,7 @@ def random_color(rgb: bool = False, maximum: int = 255) -> np.ndarray:
         A float32 array of 3 numbers, in range [0, 1] or [0, 255].
     """
     if maximum not in (1, 255):
-        raise ValueError('maximum should be 1 or 255. Got {}'.format(maximum))
+        raise ValueError("maximum should be 1 or 255. Got {}".format(maximum))
 
     idx = np.random.randint(0, len(_COLORS))
     ret = _COLORS[idx] * maximum
@@ -131,16 +131,16 @@ def random_color(rgb: bool = False, maximum: int = 255) -> np.ndarray:
     return ret
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import cv2
 
     H, W, size = 10, 10, 100
-    canvas = np.random.rand(H * size, W * size, 3).astype('float32')
+    canvas = np.random.rand(H * size, W * size, 3).astype("float32")
     for h in range(H):
         for w in range(W):
             idx = h * W + w
             if idx >= len(_COLORS):
                 break
-            canvas[h * size:(h + 1) * size, w * size:(w + 1) * size] = _COLORS[idx]
-    cv2.imshow('colors', canvas)
+            canvas[h * size : (h + 1) * size, w * size : (w + 1) * size] = _COLORS[idx]
+    cv2.imshow("colors", canvas)
     cv2.waitKey(0)

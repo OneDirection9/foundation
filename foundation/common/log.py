@@ -5,14 +5,11 @@ import logging
 import logging.config
 from typing import Optional
 
-__all__ = ['configure_logging']
+__all__ = ["configure_logging"]
 
 
 def configure_logging(
-    level: int = logging.INFO,
-    file: Optional[str] = None,
-    mode: str = 'w',
-    root_mode: int = 1
+    level: int = logging.INFO, file: Optional[str] = None, mode: str = "w", root_mode: int = 1
 ) -> None:
     """Configures logging.
 
@@ -32,53 +29,52 @@ def configure_logging(
             Default: 1.
     """
     if root_mode in (0, 2) and file is None:
-        raise ValueError('file should be specified when root_handler_type is 0 or 2')
+        raise ValueError("file should be specified when root_handler_type is 0 or 2")
 
-    format = '%(asctime)s %(filename)s:%(lineno)d[%(process)d] %(levelname)s %(message)s'
-    datefmt = '%Y-%m-%d %H:%M:%S.%f'
+    format = "%(asctime)s %(filename)s:%(lineno)d[%(process)d] %(levelname)s %(message)s"
+    datefmt = "%Y-%m-%d %H:%M:%S.%f"
 
     basic_formatters = {
-        'basic': {
-            'format': format,
-            'datefmt': datefmt,
+        "basic": {
+            "format": format,
+            "datefmt": datefmt,
         },
-        'colored': {
-            '()': 'coloredlogs.ColoredFormatter',
-            'format': format,
-            'datefmt': datefmt,
-        }
+        "colored": {
+            "()": "coloredlogs.ColoredFormatter",
+            "format": format,
+            "datefmt": datefmt,
+        },
     }
 
     basic_handlers = {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'level': level,
-            'formatter': 'colored',
+        "console": {
+            "class": "logging.StreamHandler",
+            "level": level,
+            "formatter": "colored",
         }
     }
 
     if file is not None:
         extra_handlers = {
-            'file':
-                {
-                    'class': 'logging.FileHandler',
-                    'filename': file,
-                    'mode': mode,
-                    'level': level,
-                    'formatter': 'basic',
-                }
+            "file": {
+                "class": "logging.FileHandler",
+                "filename": file,
+                "mode": mode,
+                "level": level,
+                "formatter": "basic",
+            }
         }
     else:
         extra_handlers = {}
 
     if root_mode == 0:
-        root_handlers = ['console', 'file']
+        root_handlers = ["console", "file"]
     elif root_mode == 1:
-        root_handlers = ['console']
+        root_handlers = ["console"]
     elif root_mode == 2:
-        root_handlers = ['file']
+        root_handlers = ["file"]
     else:
-        raise ValueError('root_mode can only be 0, 1, 2, but got {}'.format(root_mode))
+        raise ValueError("root_mode can only be 0, 1, 2, but got {}".format(root_mode))
 
     logging.config.dictConfig(
         dict(
@@ -87,8 +83,8 @@ def configure_logging(
             formatters=basic_formatters,
             handlers=dict(**basic_handlers, **extra_handlers),
             root={
-                'level': level,
-                'handlers': root_handlers,
+                "level": level,
+                "handlers": root_handlers,
             },
         )
     )

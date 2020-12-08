@@ -8,6 +8,7 @@ import logging
 import os
 import os.path as osp
 import shutil
+import tempfile
 import traceback
 from collections import OrderedDict
 from typing import IO, Any, Callable, Dict, List, MutableMapping, Optional, Union
@@ -55,6 +56,15 @@ def get_cache_dir(cache_dir: Optional[str] = None) -> str:
     """
     if cache_dir is None:
         cache_dir = os.path.expanduser(os.getenv("FOUNDATION_CACHE", "~/.torch/foundation_cache"))
+
+    try:
+        PathManager.mkdirs(cache_dir)
+        assert os.access(cache_dir, os.W_OK)
+    except (OSError, AssertionError):
+        tmp_dir = os.path.join(tempfile.gettempdir(), "foundation_cache")
+        logger = logging.getLogger(__name__)
+        logger.warning(f"{cache_dir} is not accessible! Using {tmp_dir} instead!")
+        cache_dir = tmp_dir
     return cache_dir
 
 
@@ -87,7 +97,7 @@ def file_lock(path: str):  # type: ignore
         # the lock. If failed to create the directory, the next line will raise
         # exceptions.
         pass
-    return portalocker.Lock(path + ".lock", timeout=1800)  # type: ignore
+    return portalocker.Lock(path + ".lock", timeout=3600)  # type: ignore
 
 
 class LazyPath(os.PathLike):
@@ -595,11 +605,11 @@ class OneDrivePathHandler(PathHandler):
         self, path: str, mode: str = "r", buffering: int = -1, **kwargs: Any
     ) -> Union[IO[str], IO[bytes]]:
         """
-        Open a remote HTTP path. The resource is first downloaded and cached
+        Open a remote OneDrive path. The resource is first downloaded and cached
         locally.
 
         Args:
-            path (str): A URI supported by this PathHandler
+            path (str): A OneDrive URI supported by this PathHandler
             mode (str): Specifies the mode in which the file is opened. It defaults
                 to 'r'.
             buffering (int): Not used for this PathHandler.
@@ -840,7 +850,8 @@ class PathManagerBase(object):
                 if self == PathManager:
                     logger.warning(
                         f"[PathManager] Attempting to register prefix '{prefix}' from "
-                        "the following call stack:\n" + "".join(traceback.format_stack(limit=-5))
+                        "the following call stack:\n" + "".join(traceback.format_stack(limit=5))
+                        # show the most recent callstack
                     )
                     logger.warning(
                         f"[PathManager] Prefix '{prefix}' is already registered "

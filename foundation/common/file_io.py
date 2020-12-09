@@ -18,7 +18,18 @@ import portalocker
 
 from .download import download
 
-__all__ = ["find_vcs_root", "LazyPath", "PathManager", "get_cache_dir", "file_lock"]
+__all__ = [
+    "find_vcs_root",
+    "get_cache_dir",
+    "file_lock",
+    "LazyPath",
+    "PathHandler",
+    "NativePathHandler",
+    "HTTPURLHandler",
+    "OneDrivePathHandler",
+    "PathManagerBase",
+    "PathManager",
+]
 
 
 def find_vcs_root(path: str, markers: List[str] = (".git",)) -> Optional[str]:

@@ -4,12 +4,12 @@
 
 import logging
 import os
-from typing import Any, Callable, Dict, List
+from typing import IO, Any, Callable, Dict, List, Union
 
 import yaml
 from yacs.config import CfgNode as _CfgNode
 
-from .file_io import PathManager
+from .file_io import g_pathmgr
 
 BASE_KEY = "_BASE_"
 
@@ -33,22 +33,30 @@ class CfgNode(_CfgNode):
        the content of the file.
     """
 
-    @staticmethod
-    def load_yaml_with_base(filename: str, allow_unsafe: bool = False) -> dict:
+    @classmethod
+    def _open_cfg(cls, filename: str) -> Union[IO[str], IO[bytes]]:
+        """
+        Defines how a config file is opened. May be overridden to support
+        different file schemas.
+        """
+        return g_pathmgr.open(filename, "r")
+
+    @classmethod
+    def load_yaml_with_base(cls, filename: str, allow_unsafe: bool = False) -> dict:
         """
         Just like `yaml.load(open(filename))`, but inherit attributes from its
             `_BASE_`.
 
         Args:
-            filename (str): the file name of the current config. Will be used to
-                find the base config file.
+            filename (str or file-like object): the file name or file of the current config.
+                Will be used to find the base config file.
             allow_unsafe (bool): whether to allow loading the config file with
                 `yaml.unsafe_load`.
 
         Returns:
             (dict): the loaded yaml
         """
-        with PathManager.open(filename, "r") as f:
+        with cls._open_cfg(filename) as f:
             try:
                 cfg = yaml.safe_load(f)
             except yaml.constructor.ConstructorError:
@@ -60,7 +68,7 @@ class CfgNode(_CfgNode):
                     "be at risk if the file contains malicious content.".format(filename)
                 )
                 f.close()
-                with PathManager.open(filename, "r") as f:
+                with cls._open_cfg(filename) as f:
                     cfg = yaml.unsafe_load(f)  # pyre-ignore
 
         def merge_a_into_b(a: Dict[Any, Any], b: Dict[Any, Any]) -> None:
@@ -80,7 +88,7 @@ class CfgNode(_CfgNode):
             if not any(map(base_cfg_file.startswith, ["/", "https://", "http://"])):
                 # the path to base cfg is relative to the config file itself.
                 base_cfg_file = os.path.join(os.path.dirname(filename), base_cfg_file)
-            base_cfg = CfgNode.load_yaml_with_base(base_cfg_file, allow_unsafe=allow_unsafe)
+            base_cfg = cls.load_yaml_with_base(base_cfg_file, allow_unsafe=allow_unsafe)
             del cfg[BASE_KEY]
 
             merge_a_into_b(cfg, base_cfg)
@@ -96,7 +104,7 @@ class CfgNode(_CfgNode):
             allow_unsafe: whether to allow loading the config file with
                 `yaml.unsafe_load`.
         """
-        loaded_cfg = CfgNode.load_yaml_with_base(cfg_filename, allow_unsafe=allow_unsafe)
+        loaded_cfg = self.load_yaml_with_base(cfg_filename, allow_unsafe=allow_unsafe)
         loaded_cfg = type(self)(loaded_cfg)
         self.merge_from_other_cfg(loaded_cfg)
 

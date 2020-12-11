@@ -11,7 +11,7 @@ import shutil
 import tempfile
 import traceback
 from collections import OrderedDict
-from typing import IO, Any, Callable, Dict, List, MutableMapping, Optional, Union
+from typing import IO, Any, Callable, Dict, Iterable, List, MutableMapping, Optional, Union
 from urllib.parse import urlparse
 
 import portalocker
@@ -27,8 +27,8 @@ __all__ = [
     "NativePathHandler",
     "HTTPURLHandler",
     "OneDrivePathHandler",
-    "PathManagerBase",
     "PathManager",
+    "PathManagerFactory",
 ]
 
 
@@ -69,7 +69,7 @@ def get_cache_dir(cache_dir: Optional[str] = None) -> str:
         cache_dir = os.path.expanduser(os.getenv("FOUNDATION_CACHE", "~/.torch/foundation_cache"))
 
     try:
-        PathManager.mkdirs(cache_dir)
+        g_pathmgr.mkdirs(cache_dir)
         assert os.access(cache_dir, os.W_OK)
     except (OSError, AssertionError):
         tmp_dir = os.path.join(tempfile.gettempdir(), "foundation_cache")
@@ -228,6 +228,11 @@ class PathHandler(object):
         """
         raise NotImplementedError()
 
+    def _opent(
+        self, path: str, mode: str = "r", buffering: int = 32, **kwargs: Any
+    ) -> Iterable[Any]:
+        raise NotImplementedError()
+
     def _open(
         self, path: str, mode: str = "r", buffering: int = -1, **kwargs: Any
     ) -> Union[IO[str], IO[bytes]]:
@@ -367,7 +372,6 @@ class NativePathHandler(PathHandler):
         errors: Optional[str] = None,
         newline: Optional[str] = None,
         closefd: bool = True,
-        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         opener: Optional[Callable] = None,
         **kwargs: Any,
     ) -> Union[IO[str], IO[bytes]]:
@@ -530,6 +534,7 @@ class HTTPURLHandler(PathHandler):
             cached = os.path.join(dirname, filename)
             with file_lock(cached):
                 if not os.path.isfile(cached):
+                    logger.info("Downloading {} ...".format(path))
                     cached = download(path, dirname, filename=filename)
             logger.info("URL {} cached in {}".format(path, cached))
             self.cache_map[path] = cached
@@ -562,16 +567,10 @@ class HTTPURLHandler(PathHandler):
         return open(local_path, mode)
 
 
-class OneDrivePathHandler(PathHandler):
+class OneDrivePathHandler(HTTPURLHandler):
     """
     Map OneDrive (short) URLs to direct download links
     """
-
-    def __init__(self) -> None:
-        self.cache_map: Dict[str, str] = {}
-
-    def _get_supported_prefixes(self) -> List[str]:
-        return ["https://1drv.ms/u/s!"]
 
     def create_one_drive_direct_download(self, one_drive_url: str) -> str:
         """
@@ -588,59 +587,23 @@ class OneDrivePathHandler(PathHandler):
         result_url = f"https://api.onedrive.com/v1.0/shares/u!{data_b64_string}/root/content"
         return result_url
 
+    def _get_supported_prefixes(self) -> List[str]:
+        return ["https://1drv.ms/u/s!"]
+
     def _get_local_path(self, path: str, **kwargs: Any) -> str:
         """
         This implementation downloads the remote resource and caches it locally.
         The resource will only be downloaded if not previously requested.
         """
-        self._check_kwargs(kwargs)
-
         logger = logging.getLogger(__name__)
         direct_url = self.create_one_drive_direct_download(path)
 
         logger.info(f"URL {path} mapped to direct download link {direct_url}")
 
-        if path not in self.cache_map or not os.path.exists(self.cache_map[path]):
-            parsed_url = urlparse(path)
-            dirname = os.path.join(get_cache_dir(), os.path.dirname(parsed_url.path.lstrip("/")))
-            filename = path.split("/")[-1]
-            cached = os.path.join(dirname, filename)
-            with file_lock(cached):
-                if not os.path.isfile(cached):
-                    cached = download(path, dirname, filename=filename)
-            logger.info("URL {} cached in {}".format(path, cached))
-            self.cache_map[path] = cached
-        return self.cache_map[path]
-
-    def _open(
-        self, path: str, mode: str = "r", buffering: int = -1, **kwargs: Any
-    ) -> Union[IO[str], IO[bytes]]:
-        """
-        Open a remote OneDrive path. The resource is first downloaded and cached
-        locally.
-
-        Args:
-            path (str): A OneDrive URI supported by this PathHandler
-            mode (str): Specifies the mode in which the file is opened. It defaults
-                to 'r'.
-            buffering (int): Not used for this PathHandler.
-
-        Returns:
-            file: a file-like object.
-        """
-        self._check_kwargs(kwargs)
-        assert mode in ("r", "rb"), "{} does not support open with {} mode".format(
-            self.__class__.__name__, mode
-        )
-        assert (
-            buffering == -1
-        ), f"{self.__class__.__name__} does not support the `buffering` argument"
-        local_path = self._get_local_path(path)
-        return open(local_path, mode)
+        return super()._get_local_path(os.fspath(direct_url), **kwargs)
 
 
-# NOTE: this class should be renamed back to PathManager when it is moved to a new library
-class PathManagerBase(object):
+class PathManager(object):
     """
     A class for users to open generic paths or translate generic paths to file names.
 
@@ -676,6 +639,24 @@ class PathManagerBase(object):
             if path.startswith(p):
                 return self._path_handlers[p]
         return self._native_path_handler
+
+    def opent(
+        self, path: str, mode: str = "r", buffering: int = 32, **kwargs: Any
+    ) -> Iterable[Any]:
+        """
+        Open a tabular data source. Only reading is supported.
+        The opent() returns a Python iterable collection object, compared to bytes/text data with
+        open()
+
+        Args:
+            path (str): A URI supported by this PathHandler
+            mode (str): Specifies the mode in which the file is opened. It defaults
+                to 'r'
+            buffering (int): number of rows fetched and cached
+        Returns:
+            An iterable collection object.
+        """
+        return self.__get_path_handler(path)._opent(path, mode, buffering, **kwargs)
 
     def open(
         self, path: str, mode: str = "r", buffering: int = -1, **kwargs: Any
@@ -858,7 +839,8 @@ class PathManagerBase(object):
             old_handler_type = type(self._path_handlers[prefix])
             if allow_override:
                 # if using the global PathManager, show the warnings
-                if self == PathManager:
+                global g_pathmgr
+                if self == g_pathmgr:
                     logger.warning(
                         f"[PathManager] Attempting to register prefix '{prefix}' from "
                         "the following call stack:\n" + "".join(traceback.format_stack(limit=5))
@@ -909,21 +891,69 @@ class PathManagerBase(object):
             handler._strict_kwargs_check = enable
 
 
-PathManager = PathManagerBase()
 """
-A global PathManager.
-
-Any sufficiently complicated/important project should create their own
-PathManager instead of using the global PathManager, to avoid conflicts
-when multiple projects have conflicting PathHandlers.
 
 History: at first, PathManager is part of detectron2 *only*, and therefore
-does not consider cross-projects conflict issues. It is later used by more
-projects and moved to fvcore to faciliate more use across projects and lead
-to some conflicts.
-Now the class `PathManagerBase` is added to help create per-project path manager,
-and this global is still named "PathManager" to keep backward compatibility.
+does not consider cross-projects conflict issues. It was designed to provide
+a global interface with static methods.
+
+It is later used by more projects and moved to iopath to faciliate more use
+across projects and lead to some conflicts.
+
+Now 'PathManager' class has been changed to provide a per-project interface.
+This means that any project using PathManager will first have to instantiate the
+class and call methods on the instantiated object.
+
+  example:
+
+  _pathmgr = PathManager()
+  _pathmgr.register_handler(<a PathHandler instance>)
+  _pathmgr.mkdir(<dir-path>)
+
 """
 
-PathManager.register_handler(HTTPURLHandler())
-PathManager.register_handler(OneDrivePathHandler())
+
+class PathManagerFactory:
+    """
+    PathManagerFactory is the class responsible for creating new PathManager
+    instances and removing them when no longer needed.
+    PathManager can be instantiated directly too, but it is recommended that
+    you use PathManagerFactory to create them.
+    """
+
+    GLOBAL_PATH_MANAGER = "global_path_manager"
+    pm_list = {}
+
+    @staticmethod
+    def get(key=GLOBAL_PATH_MANAGER) -> PathManager:
+        """
+        Get the path manager instance associated with a key.
+        A new instance will be created if there is no existing
+        instance associated with the key passed in.
+        Args:
+            key (str):
+        """
+        if key not in PathManagerFactory.pm_list:
+            PathManagerFactory.pm_list[key] = PathManager()
+        return PathManagerFactory.pm_list[key]
+
+    @staticmethod
+    def remove(key):
+        """
+        Remove the path manager instance associated with a key.
+        Args:
+            key (str):
+        """
+        if key in PathManagerFactory.pm_list:
+            _pm = PathManagerFactory.pm_list.pop(key)  # noqa: F841
+            del _pm
+
+
+"""
+A global instance of PathManager.
+This global instance is provided for backward compatibility, but it is
+recommended that clients use PathManagerFactory
+"""
+g_pathmgr = PathManagerFactory.get()
+g_pathmgr.register_handler(HTTPURLHandler())
+g_pathmgr.register_handler(OneDrivePathHandler())

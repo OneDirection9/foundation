@@ -69,7 +69,7 @@ class CfgNode(_CfgNode):
                 )
                 f.close()
                 with cls._open_cfg(filename) as f:
-                    cfg = yaml.unsafe_load(f)  # pyre-ignore
+                    cfg = yaml.unsafe_load(f)
 
         def merge_a_into_b(a: Dict[Any, Any], b: Dict[Any, Any]) -> None:
             # merge dict a into dict b. values in a will overwrite b.
@@ -130,7 +130,7 @@ class CfgNode(_CfgNode):
         )
         return super().merge_from_list(cfg_list)
 
-    def __setattr__(self, name: str, val: Any) -> None:  # pyre-ignore
+    def __setattr__(self, name: str, val: Any) -> None:
         if name.startswith("COMPUTED_"):
             if name in self:
                 old_val = self[name]

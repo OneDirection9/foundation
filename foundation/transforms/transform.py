@@ -260,9 +260,11 @@ class TransformList(Transform):
     def _apply(self, x: _T, meth: str) -> _T:
         """
         Apply the transforms on the input.
+
         Args:
             x: input to apply the transform operations.
             meth (str): meth.
+
         Returns:
             x: after apply the transformation.
         """
@@ -280,6 +282,7 @@ class TransformList(Transform):
         """
         Args:
             other (TransformList): transformation to add.
+
         Returns:
             TransformList: list of transforms.
         """
@@ -290,6 +293,7 @@ class TransformList(Transform):
         """
         Args:
             other (TransformList): transformation to add.
+
         Returns:
             TransformList: list of transforms.
         """
@@ -301,6 +305,7 @@ class TransformList(Transform):
         """
         Args:
             other (TransformList): transformation to add.
+
         Returns:
             TransformList: list of transforms.
         """
@@ -354,6 +359,7 @@ class HFlipTransform(Transform):
             img (ndarray): of shape HxW, HxWxC, or NxHxWxC. The array can be
                 of type uint8 in range [0, 255], or floating point in range
                 [0, 1] or [0, 255].
+
         Returns:
             ndarray: the flipped image(s).
         """
@@ -371,6 +377,7 @@ class HFlipTransform(Transform):
         Args:
             coords (ndarray): floating point array of shape Nx2. Each row is
                 (x, y).
+
         Returns:
             ndarray: the flipped coordinates.
 
@@ -405,6 +412,7 @@ class VFlipTransform(Transform):
             img (ndarray): of shape HxW, HxWxC, or NxHxWxC. The array can be
                 of type uint8 in range [0, 255], or floating point in range
                 [0, 1] or [0, 255].
+
         Returns:
             ndarray: the flipped image(s).
         """
@@ -424,6 +432,7 @@ class VFlipTransform(Transform):
         Args:
             coords (ndarray): floating point array of shape Nx2. Each row is
                 (x, y).
+
         Returns:
             ndarray: the flipped coordinates.
 
@@ -536,6 +545,7 @@ class ScaleTransform(Transform):
         Args:
             coords (ndarray): floating point array of shape Nx2. Each row is
                 (x, y).
+
         Returns:
             ndarray: resized coordinates.
         """
@@ -550,6 +560,7 @@ class ScaleTransform(Transform):
         Args:
             segmentation (ndarray): of shape HxW. The array should have integer
                 or bool dtype.
+
         Returns:
             ndarray: resized segmentation.
         """
@@ -587,6 +598,7 @@ class GridSampleTransform(Transform):
                 [0, 1] or [0, 255].
             interp (str): interpolation methods. Options include `nearest` and
                 `bilinear`.
+
         Returns:
             ndarray: grid sampled image(s).
         """
@@ -613,6 +625,7 @@ class GridSampleTransform(Transform):
         Args:
             segmentation (ndarray): of shape HxW. The array should have integer
                 or bool dtype.
+
         Returns:
             ndarray: grid sampled segmentation.
         """
@@ -651,6 +664,7 @@ class CropTransform(Transform):
             img (ndarray): of shape NxHxWxC, or HxWxC or HxW. The array can be
                 of type uint8 in range [0, 255], or floating point in range
                 [0, 1] or [0, 255].
+
         Returns:
             ndarray: cropped image(s).
         """
@@ -666,6 +680,7 @@ class CropTransform(Transform):
         Args:
             coords (ndarray): floating point array of shape Nx2. Each row is
                 (x, y).
+
         Returns:
             ndarray: cropped coordinates.
         """
@@ -682,6 +697,7 @@ class CropTransform(Transform):
         Args:
             polygons (list[ndarray]): each is a Nx2 floating point array of
                 (x, y) format in absolute coordinates.
+
         Returns:
             ndarray: cropped polygons.
         """
@@ -805,6 +821,7 @@ class BlendTransform(Transform):
                 [0, 1] or [0, 255].
             interp (str): keep this option for consistency, perform blend would not
                 require interpolation.
+
         Returns:
             ndarray: blended image(s).
         """

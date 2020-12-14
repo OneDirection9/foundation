@@ -54,6 +54,7 @@ class Transform(metaclass=ABCMeta):
             img (ndarray): of shape NxHxWxC, or HxWxC or HxW. The array can be
                 of type uint8 in range [0, 255], or floating point in range
                 [0, 1] or [0, 255].
+
         Returns:
             ndarray: image after apply the transformation.
         """
@@ -628,7 +629,7 @@ class CropTransform(Transform):
         h: int,
         orig_w: Optional[int] = None,
         orig_h: Optional[int] = None,
-    ):
+    ) -> None:
         """
         Args:
             x0, y0, w, h (int): crop the image(s) by img[y0:y0+h, x0:x0+w].

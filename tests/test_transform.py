@@ -1,23 +1,26 @@
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
-#
-# Modified by: Zhipeng Han
+# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+
 import itertools
 import unittest
 from typing import Any, Tuple
 
-import cv2
 import numpy as np
+import torch
 
 from foundation.transforms import transform as T
-from foundation.transforms.transform import CV2_INTER_CODES
+from foundation.transforms.transform_util import to_float_tensor, to_numpy
 
 
+# pyre-ignore-all-errors
 class TestTransforms(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
         np.random.seed(42)
 
     def test_register(self):
+        """
+        Test register.
+        """
         dtype = "int"
 
         def add1(t, x):
@@ -31,8 +34,8 @@ class TestTransforms(unittest.TestCase):
 
         transforms = T.TransformList(
             [
-                T.ResizeTransform(0, 0, 0, 0, "bilinear"),
-                T.CropTransform(0, 0, 10, 10),
+                T.ScaleTransform(0, 0, 0, 0, 0),
+                T.CropTransform(0, 0, 0, 0),
                 T.HFlipTransform(3),
             ]
         )
@@ -44,7 +47,7 @@ class TestTransforms(unittest.TestCase):
         transforms = T.NoOpTransform() + transforms
         self.assertEqual(len(transforms), 13)
 
-        with self.assertRaises(TypeError):
+        with self.assertRaises(AssertionError):
             T.HFlipTransform.register_type(dtype, lambda x: 1)
 
         with self.assertRaises(AttributeError):
@@ -64,7 +67,9 @@ class TestTransforms(unittest.TestCase):
         self.assertEqual(transforms.apply_float(3), 4)
 
     def test_noop_transform_no_register(self):
-        """NoOpTransform does not need register - it's by default no-op."""
+        """
+        NoOpTransform does not need register - it's by default no-op.
+        """
         t = T.NoOpTransform()
         self.assertEqual(t.apply_anything(1), 1)
 
@@ -74,7 +79,7 @@ class TestTransforms(unittest.TestCase):
         Given the input array, return the expected output array and shape after
         applying the blend transformation.
         Args:
-            imgs (array): image array before the transform.
+            imgs (array): image(s) array before the transform.
             args (list): list of arguments. Details can be found in test case.
         Returns:
             img (array): expected output array after apply the transformation.
@@ -90,70 +95,99 @@ class TestTransforms(unittest.TestCase):
         return img, img.shape
 
     @staticmethod
-    def CropTransform_img_gt(img, *args) -> Tuple[np.ndarray, list]:
+    def CropTransform_img_gt(imgs, *args) -> Tuple[np.ndarray, list]:
         """
         Given the input array, return the expected output array and shape after
         applying the crop transformation.
         Args:
-            img (array): image array before the transform.
+            imgs (array): image(s) array before the transform.
             args (list): list of arguments. Details can be found in test case.
         Returns:
             img (array): expected output array after apply the transformation.
             (list): expected shape of the output array.
         """
-        x1, y1, h, w = args
-        ret = img[y1 : y1 + h, x1 : x1 + w]
+        x0, y0, w, h = args
+        if len(imgs.shape) <= 3:
+            ret = imgs[y0 : y0 + h, x0 : x0 + w]
+        else:
+            ret = imgs[..., y0 : y0 + h, x0 : x0 + w, :]
         return ret, ret.shape
 
     @staticmethod
-    def VFlipTransform_img_gt(img, *args) -> Tuple[np.ndarray, list]:
+    def GridSampleTransform_img_gt(imgs, *args) -> Tuple[np.ndarray, list]:
+        """
+        Given the input array, return the expected output array and shape after
+        applying the grid sampling transformation. Currently only dummy gt is
+        prepared.
+        Args:
+            imgs (array): image(s) array before the transform.
+            args (list): list of arguments. Details can be found in test case.
+        Returns:
+            img (array): expected output array after apply the transformation.
+            (list): expected shape of the output array.
+        """
+        return imgs, imgs.shape
+
+    @staticmethod
+    def VFlipTransform_img_gt(imgs, *args) -> Tuple[np.ndarray, list]:
         """
         Given the input array, return the expected output array and shape after
         applying the vertical flip transformation.
         Args:
-            img (array): image array before the transform.
+            imgs (array): image(s) array before the transform.
             args (list): list of arguments. Details can be found in test case.
         Returns:
             img (array): expected output array after apply the transformation.
             (list): expected shape of the output array.
         """
-        return img[::-1, :], img.shape
+        if len(imgs.shape) <= 3:
+            # HxW or HxWxC.
+            return imgs[::-1, :], imgs.shape
+        else:
+            # TxHxWxC.
+            return imgs[:, ::-1, :], imgs.shape
 
     @staticmethod
-    def HFlipTransform_img_gt(img, *args) -> Tuple[np.ndarray, list]:
+    def HFlipTransform_img_gt(imgs, *args) -> Tuple[np.ndarray, list]:
         """
         Given the input array, return the expected output array and shape after
         applying the horizontal flip transformation.
         Args:
-            img (array): image array before the transform.
+            imgs (array): image(s) array before the transform.
             args (list): list of arguments. Details can be found in test case.
         Returns:
             img (array): expected output array after apply the transformation.
             (list): expected shape of the output array.
         """
-        return img[:, ::-1], img.shape
+        if len(imgs.shape) <= 3:
+            # HxW or HxWxC.
+            return imgs[:, ::-1], imgs.shape
+        else:
+            # TxHxWxC.
+            return imgs[:, :, ::-1], imgs.shape
 
     @staticmethod
-    def NoOpTransform_img_gt(img, *args) -> Tuple[np.ndarray, list]:
+    def NoOpTransform_img_gt(imgs, *args) -> Tuple[np.ndarray, list]:
         """
         Given the input array, return the expected output array and shape after
         applying no transformation.
         Args:
-            img (array): image array before the transform.
+            imgs (array): image(s) array before the transform.
             args (list): list of arguments. Details can be found in test case.
         Returns:
             img (array): expected output array after apply the transformation.
             (list): expected shape of the output array.
+
         """
-        return img, img.shape
+        return imgs, imgs.shape
 
     @staticmethod
-    def ResizeTransform_img_gt(img, *args) -> Tuple[Any, Any]:
+    def ScaleTransform_img_gt(imgs, *args) -> Tuple[Any, Any]:
         """
         Given the input array, return the expected output array and shape after
         applying the resize transformation.
         Args:
-            img (array): image array before the transform.
+            imgs (array): image(s) array before the transform.
             args (list): list of arguments. Details can be found in test case.
         Returns:
             img (array): expected output array after apply the transformation.
@@ -162,8 +196,23 @@ class TestTransforms(unittest.TestCase):
                 expected output shape for sanity check.
         """
         h, w, new_h, new_w, interp = args
-        resized_img = cv2.resize(img, (new_w, new_h), interpolation=CV2_INTER_CODES[interp])
-        return resized_img, resized_img.shape
+        float_tensor = to_float_tensor(imgs)
+        if interp == "nearest":
+            if float_tensor.dim() == 3:
+                float_tensor = torch._C._nn.upsample_nearest1d(float_tensor, (new_h, new_w))
+            elif float_tensor.dim() == 4:
+                float_tensor = torch._C._nn.upsample_nearest2d(float_tensor, (new_h, new_w))
+            elif float_tensor.dim() == 5:
+                float_tensor = torch._C._nn.upsample_nearest3d(float_tensor, (new_h, new_w))
+            else:
+                return None, None
+        elif interp == "bilinear":
+            if float_tensor.dim() == 4:
+                float_tensor = torch._C._nn.upsample_bilinear2d(float_tensor, (new_h, new_w), False)
+            else:
+                return None, None
+        numpy_tensor = to_numpy(float_tensor, imgs.shape, imgs.dtype)
+        return numpy_tensor, numpy_tensor.shape
 
     @staticmethod
     def _seg_provider(n: int = 8, h: int = 10, w: int = 10) -> np.ndarray:
@@ -180,11 +229,13 @@ class TestTransforms(unittest.TestCase):
             yield np.random.randint(2, size=(h, w))
 
     @staticmethod
-    def _img_provider(c: int = 3, h: int = 10, w: int = 10) -> Tuple[np.ndarray, type, str]:
+    def _img_provider(
+        n: int = 8, c: int = 3, h: int = 10, w: int = 10
+    ) -> Tuple[np.ndarray, type, str]:
         """
         Provide different image inputs as test cases.
         Args:
-            c, h, w (int): channel, height, and width dimensions.
+            n, c, h, w (int): batch, channel, height, and width dimensions.
         Returns:
             (np.ndarray): an image to test on.
             (type): type of the current array.
@@ -195,17 +246,25 @@ class TestTransforms(unittest.TestCase):
         img_h_grid, img_w_grid = np.mgrid[0 : h * 2 : 2, 0 : w * 2 : 2]
         img_hw_grid = img_h_grid * w + img_w_grid
         img_hwc_grid = np.repeat(img_hw_grid[:, :, None], c, axis=2)
+        img_nhwc_grid = np.repeat(img_hwc_grid[None, :, :, :], n, axis=0)
+        for b in range(img_nhwc_grid.shape[0]):
+            img_nhwc_grid[b] = img_nhwc_grid[b] + b
 
         # Prepare random array as test case.
         img_hw_random = np.random.rand(h, w)
         img_hwc_random = np.random.rand(h, w, c)
+        img_nhwc_random = np.random.rand(n, h, w, c)
 
         for array_type, input_shape, init in itertools.product(
-            [np.uint8, np.float32], ["hw", "hwc"], ["grid", "random"]
+            [np.uint8, np.float32], ["hw", "hwc", "nhwc"], ["grid", "random"]
         ):
             yield locals()["img_{}_{}".format(input_shape, init)].astype(
                 array_type
             ), array_type, input_shape
+
+    def test_abstract(self):
+        with self.assertRaises(TypeError):
+            T.Transform()
 
     def test_blend_img_transforms(self):
         """
@@ -254,7 +313,7 @@ class TestTransforms(unittest.TestCase):
         """
         _trans_name = "CropTransform"
         params = (
-            # (0, 0, 0, 0),
+            (0, 0, 0, 0),
             (0, 0, 1, 1),
             (0, 0, 6, 1),
             (0, 0, 1, 6),
@@ -387,11 +446,11 @@ class TestTransforms(unittest.TestCase):
                 ),
             )
 
-    def test_resize_img_transforms(self):
+    def test_scale_img_transforms(self):
         """
-        Test ResizeTransform.
+        Test ScaleTransform.
         """
-        _trans_name = "ResizeTransform"
+        _trans_name = "ScaleTransform"
         # Testing success cases.
         params = (
             (10, 20, 20, 20, "nearest"),
@@ -453,8 +512,33 @@ class TestTransforms(unittest.TestCase):
         ):
             gt_transformer = getattr(self, "{}_img_gt".format(_trans_name))
             transformer = getattr(T, _trans_name)(*param)
-            with self.assertRaises((RuntimeError, ValueError)):
+            with self.assertRaises((RuntimeError, AssertionError)):
                 result = transformer.apply_image(img)
+
+    def test_grid_sample_img_transform(self):
+        """
+        Test grid sampling tranformation.
+        """
+        # TODO: add more complex test case for grid sample.
+        for interp in ["nearest"]:
+            grid_2d = np.stack(
+                np.meshgrid(np.linspace(-1, 1, 10), np.linspace(-1, 1, 10)), axis=2
+            ).astype(np.float)
+            grid = np.tile(grid_2d[None, :, :, :], [8, 1, 1, 1])
+            transformer = T.GridSampleTransform(grid, interp)
+
+            img_h, img_w = np.mgrid[0:10:1, 0:10:1].astype(np.float)
+            img_hw = img_h * 10 + img_w
+            img_hwc = np.repeat(img_hw[:, :, None], 3, axis=2)
+            img_bhwc = np.repeat(img_hwc[None, :, :, :], 8, axis=0)
+
+            result = transformer.apply_image(img_bhwc)
+            img_gt, shape_gt = TestTransforms.GridSampleTransform_img_gt(
+                img_bhwc, *(grid_2d, interp)
+            )
+
+            self.assertEqual(shape_gt, result.shape)
+            self.assertTrue(np.allclose(result, img_gt))
 
     def test_crop_polygons(self):
         # Ensure that shapely produce an extra vertex at the end
@@ -544,13 +628,6 @@ class TestTransforms(unittest.TestCase):
                     "params {} given input with shape {}".format(_trans_name, param, result.shape),
                 )
 
-                coords_inversed = transformer.inverse().apply_coords(result)
-                self.assertTrue(
-                    np.allclose(coords_inversed, coords),
-                    "Transform {}'s inverse fails to "
-                    "produce the original coordinates.".format(_trans_name),
-                )
-
     @staticmethod
     def VFlipTransform_coords_gt(coords, *args) -> Tuple[np.ndarray, list]:
         """
@@ -592,13 +669,6 @@ class TestTransforms(unittest.TestCase):
                 np.allclose(result, coords_gt),
                 "transform {} failed to pass the value check with"
                 "params {} given input with shape {}".format(_trans_name, param, result.shape),
-            )
-
-            coords_inversed = transformer.inverse().apply_coords(result)
-            self.assertTrue(
-                np.allclose(coords_inversed, coords),
-                "Transform {}'s inverse fails to "
-                "produce the original coordinates.".format(_trans_name),
             )
 
     @staticmethod
@@ -647,8 +717,7 @@ class TestTransforms(unittest.TestCase):
             coords_inversed = transformer.inverse().apply_coords(result)
             self.assertTrue(
                 np.allclose(coords_inversed, coords),
-                "Transform {}'s inverse fails to "
-                "produce the original coordinates.".format(_trans_name),
+                f"Transform {_trans_name}'s inverse fails to produce the original coordinates.",
             )
 
     @staticmethod
@@ -664,9 +733,9 @@ class TestTransforms(unittest.TestCase):
                 transformation.
             (list): expected shape of the output array.
         """
-        x1, y1, h, w = args
-        coords[:, 0] -= x1
-        coords[:, 1] -= y1
+        x0, y0, w, h, ow, oh = args
+        coords[:, 0] -= x0
+        coords[:, 1] -= y0
         return coords, coords.shape
 
     def test_crop_coords_transforms(self):
@@ -675,15 +744,15 @@ class TestTransforms(unittest.TestCase):
         """
         _trans_name = "CropTransform"
         params = (
-            # (0, 0, 0, 0),
-            (0, 0, 1, 1),
-            (0, 0, 6, 1),
-            (0, 0, 1, 6),
-            (0, 0, 6, 6),
-            (1, 3, 6, 6),
-            (3, 1, 6, 6),
-            (3, 3, 6, 6),
-            (6, 6, 6, 6),
+            (0, 0, 0, 0, 10, 11),
+            (0, 0, 1, 1, 10, 11),
+            (0, 0, 6, 1, 10, 11),
+            (0, 0, 1, 6, 10, 11),
+            (0, 0, 6, 6, 10, 11),
+            (1, 3, 6, 6, 10, 11),
+            (3, 1, 6, 6, 10, 11),
+            (3, 3, 6, 6, 10, 11),
+            (6, 6, 6, 6, 10, 11),
         )
         for coords, param in itertools.product(TestTransforms._coords_provider(), params):
             gt_transformer = getattr(self, "{}_coords_gt".format(_trans_name))
@@ -704,11 +773,14 @@ class TestTransforms(unittest.TestCase):
                 "params {} given input with shape {}".format(_trans_name, param, result.shape),
             )
 
-            with self.assertRaises((NotImplementedError,)):
-                _ = transformer.inverse().apply_coords(result)
+            coords_inversed = transformer.inverse().apply_coords(result)
+            self.assertTrue(
+                np.allclose(coords_inversed, coords),
+                f"Transform {_trans_name}'s inverse fails to produce the original coordinates.",
+            )
 
     @staticmethod
-    def ResizeTransform_coords_gt(coords, *args) -> Tuple[np.ndarray, list]:
+    def ScaleTransform_coords_gt(coords, *args) -> Tuple[np.ndarray, list]:
         """
         Given the input array, return the expected output array and shape after
         applying the crop transformation.
@@ -726,11 +798,11 @@ class TestTransforms(unittest.TestCase):
         coords[:, 1] = coords[:, 1] * (new_h * 1.0 / h)
         return coords, coords.shape
 
-    def test_resize_coords_transforms(self):
+    def test_scale_coords_transforms(self):
         """
-        Test ResizeTransform.
+        Test ScaleTransform.
         """
-        _trans_name = "ResizeTransform"
+        _trans_name = "ScaleTransform"
         params = (
             (10, 20, 20, 20),
             (10, 20, 10, 20),
@@ -743,7 +815,7 @@ class TestTransforms(unittest.TestCase):
 
         for coords, param in itertools.product(TestTransforms._coords_provider(), params):
             gt_transformer = getattr(self, "{}_coords_gt".format(_trans_name))
-            transformer = getattr(T, _trans_name)(*param, interp="bilinear")
+            transformer = getattr(T, _trans_name)(*param)
 
             result = transformer.apply_coords(np.copy(coords))
             coords_gt, shape_gt = gt_transformer(np.copy(coords), *param)
@@ -763,8 +835,7 @@ class TestTransforms(unittest.TestCase):
             coords_inversed = transformer.inverse().apply_coords(result)
             self.assertTrue(
                 np.allclose(coords_inversed, coords),
-                "Transform {}'s inverse fails to "
-                "produce the original coordinates.".format(_trans_name),
+                f"Transform {_trans_name}'s inverse fails to produce the original coordinates.",
             )
 
     @staticmethod
@@ -815,7 +886,7 @@ class TestTransforms(unittest.TestCase):
                 )
 
     @staticmethod
-    def ResizeTransform_seg_gt(seg, *args) -> Tuple[np.ndarray, list]:
+    def ScaleTransform_seg_gt(seg, *args) -> Tuple[np.ndarray, list]:
         """
         Given the input segmentation, return the expected output array and shape
         after applying the blend transformation.
@@ -828,14 +899,20 @@ class TestTransforms(unittest.TestCase):
             (list): expected shape of the output array.
         """
         h, w, new_h, new_w = args
-        resized_seg = cv2.resize(seg, (new_w, new_h), interpolation=CV2_INTER_CODES["nearest"])
-        return resized_seg, resized_seg.shape
+        float_tensor = torch.nn.functional.interpolate(
+            to_float_tensor(seg),
+            size=(new_h, new_w),
+            mode="nearest",
+            align_corners=None,
+        )
+        numpy_tensor = to_numpy(float_tensor, seg.shape, seg.dtype)
+        return numpy_tensor, numpy_tensor.shape
 
-    def test_resize_seg_transforms(self):
+    def test_scale_seg_transforms(self):
         """
-        Test ResizeTransform.
+        Test ScaleTransform.
         """
-        _trans_name = "ResizeTransform"
+        _trans_name = "ScaleTransform"
         params = (
             (10, 20, 20, 20),
             (10, 20, 10, 20),
@@ -848,7 +925,7 @@ class TestTransforms(unittest.TestCase):
 
         for seg, param in itertools.product(TestTransforms._seg_provider(h=10, w=20), params):
             gt_transformer = getattr(self, "{}_seg_gt".format(_trans_name))
-            transformer = getattr(T, _trans_name)(*param, interp="bilinear")
+            transformer = getattr(T, _trans_name)(*param)
 
             result = transformer.apply_segmentation(seg)
             seg_gt, shape_gt = gt_transformer(seg, *param)
@@ -879,8 +956,8 @@ class TestTransforms(unittest.TestCase):
         )
         for seg, param in itertools.product(TestTransforms._seg_provider(w=10, h=20), params):
             gt_transformer = getattr(self, "{}_seg_gt".format(_trans_name))
-            transformer = getattr(T, _trans_name)(*param, interp="bilinear")
-            with self.assertRaises((RuntimeError, ValueError, cv2.error)):
+            transformer = getattr(T, _trans_name)(*param)
+            with self.assertRaises((RuntimeError, AssertionError)):
                 result = transformer.apply_image(seg)
 
     @staticmethod
@@ -924,16 +1001,9 @@ class TestTransforms(unittest.TestCase):
                 "params {} given input with shape {}".format(_trans_name, param, result.shape),
             )
 
-            coords_inversed = transformer.inverse().apply_coords(result)
-            self.assertTrue(
-                np.allclose(coords_inversed, coords),
-                "Transform {}'s inverse fails to "
-                "produce the original coordinates.".format(_trans_name),
-            )
-
     def test_transformlist_flatten(self):
         t0 = T.HFlipTransform(width=100)
-        t1 = T.ResizeTransform(3, 4, 5, 6, None)
+        t1 = T.ScaleTransform(3, 4, 5, 6)
         t2 = T.CropTransform(4, 5, 6, 7)
         t = T.TransformList([T.TransformList([t0, t1]), t2])
         self.assertEqual(len(t.transforms), 3)

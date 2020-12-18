@@ -82,6 +82,7 @@ class Registry(object):
             self._register(name_or_obj.__name__, name_or_obj)
             return name_or_obj
 
+        # TODO: make __doc__ consistent with original object
         def wrapper(obj: Any) -> Any:
             self._register(name_or_obj, obj)
             return obj

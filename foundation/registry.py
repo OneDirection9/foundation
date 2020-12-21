@@ -82,7 +82,6 @@ class Registry(object):
             self._register(name_or_obj.__name__, name_or_obj)
             return name_or_obj
 
-        # TODO: make __doc__ consistent with original object
         def wrapper(obj: Any) -> Any:
             self._register(name_or_obj, obj)
             return obj
@@ -93,8 +92,10 @@ class Registry(object):
         """Registers a callable object presetting partial arguments."""
 
         def wrapper(obj: Callable[..., Any]) -> Callable[..., Any]:
-            self._register(name, functools.partial(obj, *args, **kwargs))
-            return obj
+            partial_obj = functools.partial(obj, *args, **kwargs)
+            partial_obj = functools.update_wrapper(partial_obj, obj)
+            self._register(name, partial_obj)
+            return partial_obj
 
         return wrapper
 

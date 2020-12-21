@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 
 
 class BaseRunner(object):
-    """Base class for iterative runner with hooks.
+    """
+    Base class for iterative runner with hooks.
 
     The only assumption we made here is: the training runs in a loop.
     A subclass can implement what the loop is.
@@ -46,7 +47,8 @@ class BaseRunner(object):
         return self._max_iter
 
     def register_hooks(self, hooks: Sequence[BaseHook]) -> None:
-        """Registers hooks to the runner.
+        """
+        Register hooks to the runner.
 
         The hooks are executed in the order they are registered.
 

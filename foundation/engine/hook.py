@@ -7,7 +7,8 @@ __all__ = ["BaseHook"]
 
 
 class BaseHook(object):
-    """Base class for hooks that can be registered with :class:`Runner`.
+    """
+    Base class for hooks that can be registered with :class:`Runner`.
 
     Each hook can implement 4 methods and take the instance of :class:`Runner` as input. The way
     they are called is demonstrated in the following snippet:
@@ -32,17 +33,25 @@ class BaseHook(object):
     """
 
     def before_train(self, runner) -> None:
-        """Called before the first iteration."""
+        """
+        Called before the first iteration.
+        """
         pass
 
     def after_train(self, runner) -> None:
-        """Called after the last iteration."""
+        """
+        Called after the last iteration.
+        """
         pass
 
     def before_step(self, runner) -> None:
-        """Called before each iteration."""
+        """
+        Called before each iteration.
+        """
         pass
 
     def after_step(self, runner) -> None:
-        """Called after each iteration."""
+        """
+        Called after each iteration.
+        """
         pass

@@ -72,11 +72,15 @@ def kaiming_uniform_init(
 
 
 def caffe2_xavier_init(module: nn.Module) -> None:
-    """Initializes `module.weight` using the "XavierFill" implemented in Caffe2."""
+    """
+    Initialize `module.weight` using the "XavierFill" implemented in Caffe2.
+    """
     # Caffe2 implementation of XavierFill in fact corresponds to kaiming_uniform_ in PyTorch
     kaiming_uniform_init(module, a=1, mode="fan_in", nonlinearity="leaky_relu", bias=0)
 
 
 def caffe2_msra_init(module: nn.Module) -> None:
-    """Initializes `module.weight` using the "MSRAFill" implemented in Caffe2."""
+    """
+    Initialize `module.weight` using the "MSRAFill" implemented in Caffe2.
+    """
     kaiming_normal_init(module, a=0, mode="fan_out", nonlinearity="relu", bias=0)

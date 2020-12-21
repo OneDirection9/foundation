@@ -96,7 +96,8 @@ class VisImage(object):
 
 
 class Visualizer(object):
-    """Visualizer that draws data about detection/segmentation on images.
+    """
+    Visualizer that draws data about detection/segmentation on images.
 
     It contains methods like `draw_{text,box,circle,line,binary_mask,polygon}` that draw primitive
     objects to images. Implementing high-level wrappers to draw custom data in some pre-defined
@@ -444,7 +445,8 @@ class Visualizer(object):
     """
 
     def _jitter(self, color: MPLColor) -> ColorVector:
-        """Randomly modifies given color to produce a slightly different color than the color given.
+        """
+        Randomly modifies given color to produce a slightly different color than the color given.
 
         Args:
             color: The original color. Refer to `matplotlib.colors` for a full list of formats that
@@ -462,7 +464,8 @@ class Visualizer(object):
         return tuple(res)
 
     def _create_grayscale_image(self, mask: Optional[np.ndarray] = None) -> np.ndarray:
-        """Creates a grayscale version of the original image.
+        """
+        Create a grayscale version of the original image.
 
         Args:
             mask: The array with dtype np.bool. If provided, the colors in masked area will be kept.
@@ -474,7 +477,8 @@ class Visualizer(object):
         return img_bw
 
     def _change_color_brightness(self, color: MPLColor, brightness_factor: float) -> ColorVector:
-        """Depending on the brightness_factor, gives a lighter or darker color i.e. a color with
+        """
+        Depending on the brightness_factor, gives a lighter or darker color i.e. a color with
         less or more saturation than the original color.
 
         Args:

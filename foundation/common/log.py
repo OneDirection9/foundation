@@ -11,7 +11,8 @@ __all__ = ["configure_logging"]
 def configure_logging(
     level: int = logging.INFO, file: Optional[str] = None, mode: str = "w", root_mode: int = 1
 ) -> None:
-    """Configures logging.
+    """
+    Configure logging.
 
     # simplified code:
     ```

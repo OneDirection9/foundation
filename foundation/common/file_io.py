@@ -7,7 +7,8 @@ __all__ = ["find_vcs_root"]
 
 
 def find_vcs_root(path: str, markers: List[str] = (".git",)) -> Optional[str]:
-    """Finds the root directory (including itself) of specified markers.
+    """
+    Find the root directory (including itself) of specified markers.
 
     Args:
         path: Path of directory or file.

@@ -3,16 +3,19 @@ from __future__ import absolute_import, division, print_function
 
 import logging
 import logging.config
+import sys
 from typing import Optional
 
 __all__ = ["configure_logging"]
 
 
 def configure_logging(
-    level: int = logging.INFO, file: Optional[str] = None, mode: str = "w", root_mode: int = 1
+    name: Optional[str] = None, lvl: int = logging.INFO, file: Optional[str] = None
 ) -> None:
     """
     Configure logging.
+
+    If coloredlogs is available, use the colored formatter to print messages.
 
     # simplified code:
     ```
@@ -23,69 +26,83 @@ def configure_logging(
     ```
 
     Args:
-        level: Logging level, include 'CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'NOTSET'.
-        file: Path to log file. If specified, add an extra handler that can write message to file.
-        mode: Specify the mode in which the logging file is opened. Default: `w`
-        root_mode: 0: both console and file logging; 1: console logging only; 2: file logging only.
-            Default: 1.
+        name (str, optional): The root module name of this logger. If None, set root logger.
+        lvl (int, optional): Logging level, include 'CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG',
+            'NOTSET'.
+        file (str, optional): Path to log file. If specified, add an extra handler that can write
+            message to file.
     """
-    if root_mode in (0, 2) and file is None:
-        raise ValueError("file should be specified when root_handler_type is 0 or 2")
+    try:
+        import coloredlogs  # noqa: F401
 
-    format = "%(asctime)s %(filename)s:%(lineno)d[%(process)d] %(levelname)s %(message)s"
-    datefmt = "%Y-%m-%d %H:%M:%S.%f"
+        color = True
+    except ImportError:
+        color = False
 
-    basic_formatters = {
-        "basic": {
-            "format": format,
+    fmt = "%(asctime)s %(filename)s:%(lineno)d %(levelname)s %(message)s"
+    datefmt = "%m-%d %H:%M:%S"
+
+    formatters = {
+        "plain": {
+            "format": fmt,
             "datefmt": datefmt,
-        },
-        "colored": {
-            "()": "coloredlogs.ColoredFormatter",
-            "format": format,
-            "datefmt": datefmt,
-        },
-    }
-
-    basic_handlers = {
-        "console": {
-            "class": "logging.StreamHandler",
-            "level": level,
-            "formatter": "colored",
         }
     }
+    if color:
+        formatters.update(
+            {
+                "color": {
+                    "()": "coloredlogs.ColoredFormatter",
+                    "format": fmt,
+                    "datefmt": datefmt,
+                },
+            }
+        )
 
+    handlers = {
+        "console": {
+            "class": "logging.StreamHandler",
+            "level": lvl,
+            "formatter": "color" if color else "plain",
+            "stream": sys.stdout,
+        }
+    }
     if file is not None:
-        extra_handlers = {
-            "file": {
-                "class": "logging.FileHandler",
-                "filename": file,
-                "mode": mode,
-                "level": level,
-                "formatter": "basic",
+        handlers.update(
+            {
+                "file": {
+                    "class": "logging.FileHandler",
+                    "filename": file,
+                    "level": lvl,
+                    "formatter": "plain",
+                }
+            }
+        )
+
+    if name is not None:
+        logger_config = {
+            "loggers": {
+                name: {
+                    "level": lvl,
+                    "propagate": False,
+                    "handlers": ["console", "file"] if file is not None else ["console"],
+                }
             }
         }
     else:
-        extra_handlers = {}
-
-    if root_mode == 0:
-        root_handlers = ["console", "file"]
-    elif root_mode == 1:
-        root_handlers = ["console"]
-    elif root_mode == 2:
-        root_handlers = ["file"]
-    else:
-        raise ValueError("root_mode can only be 0, 1, 2, but got {}".format(root_mode))
+        logger_config = {
+            "root": {
+                "level": lvl,
+                "handlers": ["console", "file"] if file is not None else ["console"],
+            }
+        }
 
     logging.config.dictConfig(
         dict(
             version=1,
             disable_existing_loggers=False,
-            formatters=basic_formatters,
-            handlers=dict(**basic_handlers, **extra_handlers),
-            root={
-                "level": level,
-                "handlers": root_handlers,
-            },
+            formatters=formatters,
+            handlers=handlers,
+            **logger_config,
         )
     )

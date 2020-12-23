@@ -23,17 +23,13 @@ install_requires = [
     "opencv-python",
     "matplotlib",
     "numpy",
-    "portalocker",
     "six",
     "yacs>=0.1.6",
-    "pyyaml>=5.1",
-    "tqdm",
     "tabulate",
 ]
 
 extras_require = {
     "all": [
-        "shapely",
         "pycocotools>=2.0.2",  # corresponds to https://github.com/ppwwyyxx/cocoapi
     ],
     "dev": [

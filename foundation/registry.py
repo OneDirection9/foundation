@@ -100,7 +100,7 @@ class Registry(object):
             partial_obj = functools.partial(obj, *args, **kwargs)
             partial_obj = functools.update_wrapper(partial_obj, obj)
             self._register(name, partial_obj)
-            return partial_obj
+            return obj
 
         return wrapper
 

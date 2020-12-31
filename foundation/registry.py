@@ -87,6 +87,7 @@ class Registry(object):
 
         def wrapper(obj: Any) -> Any:
             self._register(name_or_obj, obj)
+            # Add original obj so that it can be wrapped again and again
             return obj
 
         return wrapper
@@ -100,6 +101,7 @@ class Registry(object):
             partial_obj = functools.partial(obj, *args, **kwargs)
             partial_obj = functools.update_wrapper(partial_obj, obj)
             self._register(name, partial_obj)
+            # Add original obj so that it can be wrapped again and again
             return obj
 
         return wrapper
@@ -136,8 +138,8 @@ def build(registry: Registry, cfg: Dict[str, Any]) -> Any:
     Build python object from registry.
 
     Args:
-        registry: The registry to search the object from.
-        cfg: Config dictionary, it should at least contain the key "name".
+        registry (Registry): The registry to search the object from.
+        cfg (dict): Config dictionary, it should at least contain the key "name".
 
     Returns:
         The constructed object.

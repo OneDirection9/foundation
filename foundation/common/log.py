@@ -10,7 +10,10 @@ __all__ = ["configure_logging"]
 
 
 def configure_logging(
-    name: Optional[str] = None, lvl: int = logging.INFO, file: Optional[str] = None
+    name: Optional[str] = None,
+    lvl: int = logging.INFO,
+    file: Optional[str] = None,
+    file_only: bool = False,
 ) -> None:
     """
     Configure logging.
@@ -31,7 +34,11 @@ def configure_logging(
             'NOTSET'.
         file (str, optional): Path to log file. If specified, add an extra handler that can write
             message to file.
+        file_only (str, optional): Whether only log to file. Only valid if ``file`` is provided.
     """
+    if file_only and file is None:
+        raise ValueError("file should be provided when file_only=True")
+
     try:
         import coloredlogs  # noqa: F401
 
@@ -79,21 +86,23 @@ def configure_logging(
             }
         )
 
+    if file is None:
+        logger_handler = ["console"]
+    else:
+        if file_only:
+            logger_handler = ["file"]
+        else:
+            logger_handler = ["console", "file"]
+
     if name is not None:
         logger_config = {
-            "loggers": {
-                name: {
-                    "level": lvl,
-                    "propagate": False,
-                    "handlers": ["console", "file"] if file is not None else ["console"],
-                }
-            }
+            "loggers": {name: {"level": lvl, "propagate": False, "handlers": logger_handler}}
         }
     else:
         logger_config = {
             "root": {
                 "level": lvl,
-                "handlers": ["console", "file"] if file is not None else ["console"],
+                "handlers": logger_handler,
             }
         }
 

@@ -6,10 +6,10 @@ import logging.config
 import sys
 from typing import Optional
 
-__all__ = ["configure_logging"]
+__all__ = ["configure_logger"]
 
 
-def configure_logging(
+def configure_logger(
     name: Optional[str] = None,
     lvl: int = logging.INFO,
     file: Optional[str] = None,

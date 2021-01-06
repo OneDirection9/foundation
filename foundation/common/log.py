@@ -13,12 +13,15 @@ def configure_logging(
     name: Optional[str] = None,
     lvl: int = logging.INFO,
     file: Optional[str] = None,
-    file_only: bool = False,
+    disable_console: bool = False,
 ) -> None:
     """
-    Configure logging.
+    Configure logger with a handler named `console` that can write message to stdout stream.
+    Additionally, if ``file`` is provided, an extra handler named `file` that can write message
+    to file will be added.
 
-    If coloredlogs is available, use the colored formatter to print messages.
+    if ``coloredlogs`` is available, use the colored formatter to print messages in `console`
+    handler.
 
     # simplified code:
     ```
@@ -34,11 +37,9 @@ def configure_logging(
             'NOTSET'.
         file (str, optional): Path to log file. If specified, add an extra handler that can write
             message to file.
-        file_only (str, optional): Whether only log to file. Only valid if ``file`` is provided.
+        disable_console (bool): Whether disable the handler that write message to stdout stream.
+            Default: False
     """
-    if file_only and file is None:
-        raise ValueError("file should be provided when file_only=True")
-
     try:
         import coloredlogs  # noqa: F401
 
@@ -86,23 +87,21 @@ def configure_logging(
             }
         )
 
-    if file is None:
-        logger_handler = ["console"]
-    else:
-        if file_only:
-            logger_handler = ["file"]
-        else:
-            logger_handler = ["console", "file"]
+    logger_handlers = []
+    if not disable_console:
+        logger_handlers.append("console")
+    if file is not None:
+        logger_handlers.append("file")
 
     if name is not None:
         logger_config = {
-            "loggers": {name: {"level": lvl, "propagate": False, "handlers": logger_handler}}
+            "loggers": {name: {"level": lvl, "propagate": False, "handlers": logger_handlers}}
         }
     else:
         logger_config = {
             "root": {
                 "level": lvl,
-                "handlers": logger_handler,
+                "handlers": logger_handlers,
             }
         }
 

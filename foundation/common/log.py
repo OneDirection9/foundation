@@ -33,8 +33,7 @@ def configure_logger(
 
     Args:
         name (str, optional): The root module name of this logger. If None, set root logger.
-        lvl (int, optional): Logging level, include 'CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG',
-            'NOTSET'.
+        lvl (int): Logging level, include 'CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'NOTSET'.
         file (str, optional): Path to log file. If specified, add an extra handler that can write
             message to file.
         disable_console (bool): Whether disable the handler that write message to stdout stream.

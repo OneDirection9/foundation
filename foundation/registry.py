@@ -50,7 +50,7 @@ class Registry(object):
     def __init__(self, name: str) -> None:
         """
         Args:
-            name: The name of this registry.
+            name (str): The name of this registry.
         """
         self._name = name
         self._registry: Dict[str, Any] = {}

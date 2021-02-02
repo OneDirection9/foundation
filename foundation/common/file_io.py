@@ -11,11 +11,11 @@ def find_vcs_root(path: str, markers: List[str] = (".git",)) -> Optional[str]:
     Find the root directory (including itself) of specified markers.
 
     Args:
-        path: Path of directory or file.
-        markers: List of file or directory names. Default: ('.git',)
+        path (str): Path of directory or file.
+        markers (List[str]): List of file or directory names. Default: (".git",)
 
     Returns:
-        The directory contained one of the markers or None if not found.
+        str or None: The directory contained one of the markers or None if not found.
     """
     if osp.isfile(path):
         path = osp.dirname(path)

@@ -4,7 +4,7 @@
 from __future__ import absolute_import, division, print_function
 
 import logging
-from typing import NoReturn, Sequence
+from typing import List, NoReturn
 
 from .hook import BaseHook
 
@@ -46,7 +46,7 @@ class BaseRunner(object):
     def max_iter(self) -> int:
         return self._max_iter
 
-    def register_hooks(self, hooks: Sequence[BaseHook]) -> None:
+    def register_hooks(self, hooks: List[BaseHook]) -> None:
         """
         Register hooks to the runner.
 

@@ -97,11 +97,11 @@ _COLORS = np.array(
 def colormap(rgb: bool = False, maximum: int = 255) -> np.ndarray:
     """
     Args:
-        rgb: Whether to return RGB colors or BGR colors.
-        maximum: Either 1 or 255.
+        rgb (bool): Whether to return RGB colors or BGR colors.
+        maximum (int): Either 1 or 255.
 
     Returns:
-        A float32 array of Nx3 colors, in range [0, 1] or [0, 255].
+        np.ndarray: A float32 array of Nx3 colors, in range [0, 1] or [0, 255].
     """
     if maximum not in (1, 255):
         raise ValueError("maximum should be 1 or 255. Got {}".format(maximum))
@@ -115,11 +115,11 @@ def colormap(rgb: bool = False, maximum: int = 255) -> np.ndarray:
 def random_color(rgb: bool = False, maximum: int = 255) -> np.ndarray:
     """
     Args:
-        rgb: Whether to return RGB colors or BGR colors.
-        maximum: Either 1 or 255.
+        rgb (bool): Whether to return RGB colors or BGR colors.
+        maximum (int): Either 1 or 255.
 
     Returns:
-        A float32 array of 3 numbers, in range [0, 1] or [0, 255].
+        np.ndarray: A float32 array of 3 numbers, in range [0, 1] or [0, 255].
     """
     if maximum not in (1, 255):
         raise ValueError("maximum should be 1 or 255. Got {}".format(maximum))

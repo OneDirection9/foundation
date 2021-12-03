@@ -1,4 +1,5 @@
 [tool.black]
+# Reference: https://github.com/psf/black
 line-length = 100
 include = '\.pyi?$'
 exclude = '''
@@ -17,3 +18,21 @@ exclude = '''
   )/
 )
 '''
+
+[tool.isort]
+# Reference: https://github.com/PyCQA/isort
+profile = "black"
+line_length = 100
+multi_line_output = 3
+include_trailing_comma = true
+default_section= "FIRSTPARTY"
+sections= ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+no_lines_before = ["STDLIB", "LOCALFOLDER"]
+
+[tool.pytest.ini_options]
+# Reference: https://docs.pytest.org/
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]

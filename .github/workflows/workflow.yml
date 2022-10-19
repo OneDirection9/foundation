@@ -39,6 +39,7 @@ jobs:
       run: poetry install --no-interaction --no-root
     - name: Lint
       run: |
+        source .venv/bin/activate
         echo "Runing flake8"
         flake8 foundation/ tests/
         echo "Runing isort"

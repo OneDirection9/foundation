@@ -46,11 +46,6 @@ jobs:
         isort --check-only foundation/ tests/
         echo "Runing black"
         black foundation/ tests/
-    - name: Run tests
-      run: |
-        echo "Running tests"
-        source .venv/bin/activate
-        pytest -n 8 tests/
 
   macos-tests:
 

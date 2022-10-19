@@ -18,15 +18,25 @@ jobs:
         python-version: [3.9]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v3
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
     - name: Install dependencies
-      run: |
-        curl -sSL https://install.python-poetry.org | python3 -
-        poetry install
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction --no-root
     - name: Lint
       run: |
         echo "Runing flake8"
@@ -35,7 +45,9 @@ jobs:
         isort --check-only foundation/ tests/
         echo "Runing black"
         black foundation/ tests/
-    - name:
+    - name: Run tests
       run: |
         echo "Running tests"
-        pytest -n 8
+        source .venv/bin/activate
+        pytest -n 8 tests/
+        coverage report

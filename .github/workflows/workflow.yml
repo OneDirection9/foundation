@@ -51,4 +51,8 @@ jobs:
         echo "Running tests"
         source .venv/bin/activate
         pytest -n 8 tests/
-        coverage report
+    - name: Upload coverage
+      uses: codecov/codecov-action@v1
+      with:
+        file: .out/coverage.xml
+        fail_ci_if_error: false

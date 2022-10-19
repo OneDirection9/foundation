@@ -68,6 +68,11 @@ def setup_logger(
         filestream_handler.setFormatter(plain_formatter)
         handlers.append(filestream_handler)
 
+    if len(handlers) == 0:
+        logger.warning(
+            "No handlers are added. Please considering set `rank` to 0 or specify `output`"
+        )
+
     for handler in handlers:
         handler.setLevel(level)
         logger.addHandler(handler)

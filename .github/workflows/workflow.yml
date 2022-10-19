@@ -35,3 +35,7 @@ jobs:
         isort --check-only foundation/ tests/
         echo "Runing black"
         black foundation/ tests/
+    - name:
+      run: |
+        echo "Running tests"
+        pytest -n 8

@@ -1,5 +1,4 @@
 from __future__ import absolute_import, division, print_function
-
 import copy
 import functools
 import inspect
@@ -15,7 +14,8 @@ __all__ = ["Registry", "build"]
 
 
 class Registry(object):
-    """A class that keeps a set of objects that can be selected by the name.
+    """
+    A class that keeps a set of objects that can be selected by the name.
 
     To create a registry (e.g. a backbone registry):
 
@@ -49,7 +49,7 @@ class Registry(object):
     def __init__(self, name: str) -> None:
         """
         Args:
-            name: The name of this registry.
+            name (str): The name of this registry.
         """
         self._name = name
         self._registry: Dict[str, Any] = {}
@@ -77,28 +77,38 @@ class Registry(object):
         self._registry[name] = obj
 
     def register(self, name_or_obj: Union[str, Callable[..., Any]]) -> Callable[..., Any]:
-        """Registers a python object."""
+        """
+        Register a python object.
+        """
         if callable(name_or_obj):
             self._register(name_or_obj.__name__, name_or_obj)
             return name_or_obj
 
         def wrapper(obj: Any) -> Any:
             self._register(name_or_obj, obj)
+            # Add original obj so that it can be wrapped again and again
             return obj
 
         return wrapper
 
     def register_partial(self, name: str, *args: Any, **kwargs: Any) -> Callable[..., Any]:
-        """Registers a callable object presetting partial arguments."""
+        """
+        Register a callable object presetting partial arguments.
+        """
 
         def wrapper(obj: Callable[..., Any]) -> Callable[..., Any]:
-            self._register(name, functools.partial(obj, *args, **kwargs))
+            partial_obj = functools.partial(obj, *args, **kwargs)
+            partial_obj = functools.update_wrapper(partial_obj, obj)
+            self._register(name, partial_obj)
+            # Add original obj so that it can be wrapped again and again
             return obj
 
         return wrapper
 
     def get(self, name: str) -> Any:
-        """Returns the registered python object."""
+        """
+        Return the registered python object.
+        """
         if name not in self._registry:
             raise KeyError(
                 "'{}' is not registered, available keys are: {}".format(name, self.list())
@@ -106,7 +116,9 @@ class Registry(object):
         return self._registry[name]
 
     def list(self) -> List[str]:
-        """Lists all registered keys."""
+        """
+        List all registered keys.
+        """
         return list(self._registry.keys())
 
     def __contains__(self, key: str) -> bool:
@@ -121,11 +133,12 @@ class Registry(object):
 
 
 def build(registry: Registry, cfg: Dict[str, Any]) -> Any:
-    """Builds python object from registry.
+    """
+    Build python object from registry.
 
     Args:
-        registry: The registry to search the object from.
-        cfg: Config dictionary, it should at least contain the key "name".
+        registry (Registry): The registry to search the object from.
+        cfg (dict): Config dictionary, it should at least contain the key "name".
 
     Returns:
         The constructed object.

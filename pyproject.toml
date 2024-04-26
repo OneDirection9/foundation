@@ -1,81 +1,90 @@
-[tool.poetry]
+[build-system]
+requires = ["flit_core"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.module]
+name = "foundation"
+
+[project]
 name = "Foundation"
 version = "0.0.1"
-description = "Fundation"
-authors = ["Your Name <you@example.com>"]
-exclude = ["tests"]
-packages = [
-    { include = "foundation" }
+description = "Foundation"
+readme = "README.md"
+requires-python = ">=3.10"
+
+dependencies = [
+    "coloredlogs~=15.0.1",
+    "tabulate~=0.9.0",
 ]
 
-[tool.poetry.dependencies]
-# Reference: https://python-poetry.org/docs/
-python = ">=3.9, <3.10"
-coloredlogs = "^15.0.0"
-six = "~1.16.0"
-tabulate = "~0.9.0"
-
-[tool.poetry.group.dev.dependencies]
-flake8 = "5.0.4"
-flake8-bugbear = "*"
-flake8-comprehensions = "*"
-isort = "5.10.1"
-black = "22.10.0"
-pre-commit = "2.20.0"
-genbadge = {version = "^1.1.0", extras = ["coverage", "tests"]}
-pytest = "^6.2.5"
-pytest-cov = "^4.0.0"
-pytest-xdist = {version = "^2.5.0", extras = ["psutil"]}
-
-[tool.black]
-# Reference: https://github.com/psf/black
-line-length = 100
-include = '\.pyi?$'
-exclude = '''
-(
-  /(
-      \.eggs         # exclude a few common directories in the
-    | \.git          # root of the project
-    | \.hg
-    | \.mypy_cache
-    | \.tox
-    | \.venv
-    | _build
-    | buck-out
-    | build
-    | dist
-  )/
-)
-'''
-
-[tool.isort]
-# Reference: https://github.com/PyCQA/isort
-profile = "black"
-line_length = 100
-multi_line_output = 3
-include_trailing_comma = true
-default_section= "FIRSTPARTY"
-sections= ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
-no_lines_before = ["STDLIB", "LOCALFOLDER"]
-
-[tool.pytest.ini_options]
-# Reference: https://docs.pytest.org/
-addopts = "--cov-report html:.out/htmlcov --cov-report term --cov-report xml:.out/coverage.xml --cov foundation"
-testpaths = [
-    "tests",
+[project.optional-dependencies]
+dev = [
+    "coverage~=7.2.7",
+    "genbadge[coverage,tests]~=1.1.0",
+    "lxml~=4.9.2",
+    "pytest~=7.4.2",
+    "pytest-cov~=4.1.0",
+    "pytest-xdist~=3.3.1",
+    "pytest-asyncio",
+    "mypy~=1.4.0",  # stactic type checker
+    "docformatter[tomli]~=1.7.5",
+    "pre-commit~=3.2.2",
+    "ruff~=0.4.2",
+    "mdformat-ruff~=0.1.3",
+    "ipdb",
 ]
+
+[project.scripts]
+quest = "sage_search_eval.qu.main:main"
+
+
+[tool.docformatter]
+black = true
+recursive = true
+close-quotes-on-newline = true
+wrap-summaries = 100
+wrap-descriptions = 100
+
+
+[tool.mypy]
+python_version = "3.10"
+namespace_packages = true
+# The settings below are equivalent to `strict = true`
+warn_unused_configs = true
+disallow_any_generics = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_return_any = true
+no_implicit_reexport = true
+strict_equality = true
+
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
 
 [tool.coverage.html]
 directory = ".out/htmlcov"
 
 [tool.coverage.run]
-source = ["foundation"]
-omit = ["tests/*"]
-
-[tool.coverage.report]
-# Regexes for lines to exclude from consideration
-exclude_lines = [
-    "pragma: no cover", # Have to re-enable the standard pragma
-    "if __name__ == .__main__.:", # Don't complain about code within main
-    "def main[(]"
+source = ["sage_search_eval"]
+omit = [
+    ".tox/*",
 ]
+branch = true
+parallel = true
+concurrency = ["multiprocessing"]
+
+
+[tool.pytest.ini_options]
+# code coverage to be increased progresively to 75%
+addopts = "--cov-fail-under=10 --cov-report html --cov-report term --cov-report xml:.out/coverage.xml"

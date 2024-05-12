@@ -10,7 +10,7 @@ repos:
 - repo: local
   hooks:
   - id: make-style
-    name: autoformat
+    name: autostyle
     entry: make style
     language: system
 - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt

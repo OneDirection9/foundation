@@ -19,8 +19,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "coverage~=7.2.7",
     "genbadge[coverage,tests]~=1.1.0",
+    "defusedxml~=0.7.1",
     "lxml~=4.9.2",
     "pytest~=7.4.2",
     "pytest-cov~=4.1.0",
@@ -33,9 +33,6 @@ dev = [
     "mdformat-ruff~=0.1.3",
     "ipdb",
 ]
-
-[project.scripts]
-quest = "sage_search_eval.qu.main:main"
 
 
 [tool.docformatter]
@@ -72,11 +69,8 @@ module = "tests.*"
 disallow_untyped_defs = false
 
 
-[tool.coverage.html]
-directory = ".out/htmlcov"
-
 [tool.coverage.run]
-source = ["sage_search_eval"]
+source = ["foundation"]
 omit = [
     ".tox/*",
 ]
@@ -86,5 +80,14 @@ concurrency = ["multiprocessing"]
 
 
 [tool.pytest.ini_options]
+# pytest document:
+#   https://docs.pytest.org/en/stable/reference/reference.html#configuration-options
+#   https://docs.pytest.org/en/stable/reference/reference.html#command-line-flags
+# coverage document:
+#   https://coverage.readthedocs.io/en/latest/cmd.html#
 # code coverage to be increased progresively to 75%
-addopts = "--cov-fail-under=10 --cov-report html --cov-report term --cov-report xml:.out/coverage.xml"
+addopts = "--cov-fail-under=10 --cov-report term"
+junit_suite_name = "pytest"
+filterwarnings = [
+    "ignore::DeprecationWarning"
+]

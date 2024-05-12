@@ -1,15 +1,20 @@
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
-    hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
-        args: ['--unsafe'] # checks syntax without loading yaml
-      - id: check-added-large-files
-  - repo: local
-    hooks:
-      - id: make-format
-        name: autoformat
-        entry: make format
-        language: system
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.4.0
+  hooks:
+  - id: trailing-whitespace
+  - id: end-of-file-fixer
+  - id: check-yaml
+    args: [--unsafe]       # checks syntax without loading yaml
+  - id: check-added-large-files
+- repo: local
+  hooks:
+  - id: make
+    name: style format and type check
+    entry: make
+    language: system
+- repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
+  rev: 0.2.3
+  hooks:
+  - id: yamlfmt
+    args: [--mapping, '2', --sequence, '2', --offset, '0', --implicit_start, --width, '100']

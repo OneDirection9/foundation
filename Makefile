@@ -25,12 +25,13 @@ check: style-check mypy
 style:
 	ruff format $(SOURCE_DIRS)
 	ruff check --fix $(SOURCE_DIRS)
-	mdformat $(SOURCE_DIRS)
+	mdformat .
 
 .PHONY: style-check
 style-check:
 	ruff format --check $(SOURCE_DIRS)
 	ruff check --no-fix $(SOURCE_DIRS)
+	mdformat --check .
 
 .PHONY: mypy
 mypy:

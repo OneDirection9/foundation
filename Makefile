@@ -51,7 +51,6 @@ interactive-test:
 	pytest -v $(TESTS_DIR) \
 		   --junit-xml=$(OUT_DIR)/test-results/junit_pytest.xml \
 		   --pdb -x
-	@echo " => Open test report in browser: $(OUT_DIR)/test-results/junit_pytest.xml"
 
 .PHONY: no-capture-test
 no-capture-test:
@@ -59,7 +58,6 @@ no-capture-test:
 	pytest -v $(TESTS_DIR) \
 		   --junit-xml=$(OUT_DIR)/test-results/junit_pytest.xml \
 		   -s
-	@echo " => Open test report in browser: $(OUT_DIR)/test-results/junit_pytest.xml"
 
 .PHONY: coverage
 coverage:

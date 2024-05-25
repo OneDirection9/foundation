@@ -25,13 +25,13 @@ check: style-check mypy
 style:
 	ruff format $(SOURCE_DIRS)
 	ruff check --fix $(SOURCE_DIRS)
-	mdformat .
+	mdformat ./
 
 .PHONY: style-check
 style-check:
 	ruff format --check $(SOURCE_DIRS)
 	ruff check --no-fix $(SOURCE_DIRS)
-	mdformat --check .
+	mdformat --check ./
 
 .PHONY: mypy
 mypy:
@@ -43,7 +43,6 @@ test:
 	@echo "============================== Tests =============================="
 	pytest -v $(TESTS_DIR) \
 		   --junit-xml=$(OUT_DIR)/test-results/junit_pytest.xml
-	@echo " => Open test report in browser: $(OUT_DIR)/test-results/junit_pytest.xml"
 
 .PHONY: interactive-test
 interactive-test:
@@ -82,5 +81,5 @@ clean: clean-out
 
 .PHONY: badges
 badges:
-	genbadge tests -i $(OUT_DIR)/test-results/junit_pytest.xml -o ${OUT_DIR}/badges/tests-badge.svg --local
+	genbadge tests -i $(OUT_DIR)/test-results/junit_pytest.xml -o $(OUT_DIR)/badges/tests-badge.svg --local
 	genbadge coverage -i $(OUT_DIR)/coverage.xml -o $(OUT_DIR)/badges/coverage-badge.svg --local

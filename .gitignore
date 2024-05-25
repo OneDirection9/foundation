@@ -1,5 +1,6 @@
 # Pycharm added
 .idea/
+*.DS_Store
 
 # Tests outputs
 tests/outputs/

@@ -1,24 +1,22 @@
-from __future__ import absolute_import, division, print_function
 import atexit
 import functools
 import logging
 import sys
 from pathlib import Path
-from typing import Optional
 
 from coloredlogs import ColoredFormatter
 
 __all__ = ["setup_logger"]
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def setup_logger(
     name: str,
     level: int = logging.INFO,
     *,
     rank: int = 0,
     color: bool = True,
-    output: Optional[str] = None,
+    output: str | None = None,
     file_mode: str = "w",
 ) -> logging.Logger:
     """Configures logger with given name.
@@ -82,7 +80,7 @@ def setup_logger(
 
 # cache the opened file object, so that different calls to `setup_logger`
 # with the same file name can safely write to the same file.
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def _cached_log_stream(filename: str, mode: str = "w"):
     # use 1K buffer if writing to cloud storage
     io = open(filename, mode, buffering=1024 if "://" in filename else -1)

@@ -3,7 +3,6 @@
 This repository serves as a template with configuration files for common python tools,
 including `poetry`, `pre-commit`, `black`, `isort`, etc.
 
-
 ## Development setup
 
 ### Conda
@@ -57,5 +56,5 @@ $ pytest -n 8
 Collect some useful code snippets from following repositories with nicely modification:
 
 1. [open-mmlab/mmcv](https://github.com/open-mmlab/mmcv)
-2. [facebookresearch/fvcore](https://github.com/facebookresearch/fvcore)
-3. [facebookresearch/detectron2](https://github.com/facebookresearch/detectron2)
+1. [facebookresearch/fvcore](https://github.com/facebookresearch/fvcore)
+1. [facebookresearch/detectron2](https://github.com/facebookresearch/detectron2)

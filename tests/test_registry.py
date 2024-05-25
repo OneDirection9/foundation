@@ -1,71 +1,66 @@
-from __future__ import absolute_import, division, print_function
 import unittest
 
 from foundation.registry import Registry
 
 
+def get_emtpy_registry() -> Registry:
+    class MyRegistry(Registry): ...
+
+    return MyRegistry()
+
+
 class TestRegistry(unittest.TestCase):
     def test_register(self):
         """Test register method."""
+        registry = get_emtpy_registry()
 
-        MyRegistry = Registry("Test")
-
-        @MyRegistry.register("T2")
-        @MyRegistry.register
-        class T1(object):
+        @registry.register("T2")
+        @registry.register
+        class T1:
             pass
 
-        self.assertTrue(MyRegistry.get("T1") == T1)
-        self.assertTrue(MyRegistry.get("T2") == T1)
+        self.assertTrue(registry("T1") == T1)
+        self.assertTrue(registry("T2") == T1)
 
-        MyRegistry.register("T3")(T1)
-        self.assertTrue(MyRegistry.get("T3") == T1)
+        registry.register("T3")(T1)
+        self.assertTrue(registry("T3") == T1)
 
-        @MyRegistry.register("f2")
-        @MyRegistry.register
+        @registry.register("f2")
+        @registry.register
         def f1():
             pass
 
-        self.assertTrue(MyRegistry.get("f1") == f1)
-        self.assertTrue(MyRegistry.get("f2") == f1)
+        self.assertTrue(registry("f1") == f1)
+        self.assertTrue(registry("f2") == f1)
 
-        MyRegistry.register("f3")(f1)
-        self.assertTrue(MyRegistry.get("f3") == f1)
+        registry.register("f3")(f1)
+        self.assertTrue(registry("f3") == f1)
 
         with self.assertRaises(TypeError):
-            MyRegistry.register("")(int)
-            MyRegistry.register(3)(int)
+            registry.register("")(int)
+            registry.register(3)(int)
 
         with self.assertRaises(KeyError):
-            MyRegistry.register("f1")
-            MyRegistry.get("T")
+            registry.register("f1")
+            registry("T")
 
-    def test_register_partial(self):
-        """Test register_partial method."""
+    def test_register_instance(self):
+        """Test register_instance method."""
+        registry = get_emtpy_registry()
 
-        My_Registry = Registry("Test")
-
-        @My_Registry.register_partial("T1", 3, b=4)
-        class T1(object):
-            __slots__ = ["a", "b"]
-
+        @registry.register_instance("t1_inst", 3, b=4)
+        class T1:
             def __init__(self, a, b=2):
                 self.a = a
                 self.b = b
 
-        inst = My_Registry.get("T1")()
+        inst = registry("t1_inst")
         self.assertTrue(inst.a == 3 and inst.b == 4)
 
-        My_Registry.register_partial("T2", b=2)(T1)
-        inst = My_Registry.get("T2")(1)
-        self.assertTrue(inst.a == 1 and inst.b == 2)
-
-        @My_Registry.register_partial("f1", 3, b=4)
-        def f1(a, b=2):
-            return a + b
-
-        res = My_Registry.get("f1")()
-        self.assertTrue(res == f1(3, 4))
-
-        My_Registry.register_partial("f2", 3)(f1)
-        self.assertTrue(My_Registry.get("f2")() == f1(3))
+    def test_independent_register(self):
+        r1, r2 = get_emtpy_registry(), get_emtpy_registry()
+        r1.register("a")("x")
+        r2.register("a")("y")
+        self.assertTrue("a" in r1)
+        self.assertTrue("a" in r2)
+        self.assertTrue(r1["a"] != r2["a"])

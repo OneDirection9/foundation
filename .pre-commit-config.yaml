@@ -1,28 +1,20 @@
-exclude: ^tests/data/
 repos:
-- repo: https://github.com/pycqa/flake8
-  rev: 5.0.4
-  hooks:
-    - id: flake8
-      additional_dependencies: ["flake8-bugbear", "flake8-comprehensions"]
-- repo: https://github.com/pycqa/isort
-  rev: 5.10.1
-  hooks:
-    - id: isort
-- repo: https://github.com/psf/black
-  rev: 22.10.0
-  hooks:
-    - id: black
-      language_version: python3
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.3.0
+  rev: v4.4.0
   hooks:
-    - id: trailing-whitespace
-    - id: end-of-file-fixer
-    - id: check-yaml
-      args: ['--unsafe']
-    - id: requirements-txt-fixer
-    - id: fix-encoding-pragma
-      args: ['--remove']
-    - id: mixed-line-ending
-      args: ['--fix=lf']
+  - id: trailing-whitespace
+  - id: end-of-file-fixer
+  - id: check-yaml
+    args: [--unsafe]       # checks syntax without loading yaml
+  - id: check-added-large-files
+- repo: local
+  hooks:
+  - id: make-style
+    name: autostyle
+    entry: make style
+    language: system
+- repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
+  rev: 0.2.3
+  hooks:
+  - id: yamlfmt
+    args: [--mapping, '2', --sequence, '2', --offset, '0', --implicit_start, --width, '100']

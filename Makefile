@@ -38,6 +38,10 @@ mypy:
 	@echo "============================== Type check ========================="
 	mypy --explicit-package-bases --config-file pyproject.toml $(SOURCE_DIRS)
 
+.PHONY: poetry-check
+poetry-check:
+	poetry check --lock
+
 .PHONY: test
 test:
 	@echo "============================== Tests =============================="
